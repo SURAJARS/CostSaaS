@@ -65,6 +65,21 @@ const Navigation = ({ onMenuClick }) => {
         >
           <MenuIcon />
         </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+          <img
+            src="/logo.png"
+            alt="KKCW Logo"
+            style={{
+              height: 40,
+              width: 40,
+              marginRight: 8,
+              borderRadius: 4
+            }}
+          />
+          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+            KKCW
+          </Typography>
+        </Box>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           {t('dashboard.title')} - Kasikannu
         </Typography>
