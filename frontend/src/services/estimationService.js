@@ -26,12 +26,18 @@ class EstimationService {
   exportToExcel(id) {
     return axiosInstance.get(`/estimations/${id}/export/excel`, {
       responseType: 'blob'
+    }).then(response => response.data).catch(error => {
+      console.error('Excel export error:', error);
+      throw new Error(error.response?.statusText || 'Failed to export Excel');
     });
   }
 
   exportToPdf(id) {
     return axiosInstance.get(`/estimations/${id}/export/pdf`, {
       responseType: 'blob'
+    }).then(response => response.data).catch(error => {
+      console.error('PDF export error:', error);
+      throw new Error(error.response?.statusText || 'Failed to export PDF');
     });
   }
 

@@ -25,17 +25,19 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       // Customer Details
       doc.fontSize(11).font('Helvetica-Bold').text('Customer Details:', { underline: true });
       doc.fontSize(10).font('Helvetica');
-      doc.text(`Name: ${estimation.customerName}`);
-      doc.text(`Mobile: ${estimation.mobileNumber}`);
-      doc.text(`Event Date: ${estimation.eventDate?.toLocaleDateString()}`);
-      doc.text(`Guest Count: ${estimation.guestCount}`);
+      doc.text(`Name: ${estimation.customerName || 'N/A'}`);
+      doc.text(`Mobile: ${estimation.mobileNumber || 'N/A'}`);
+      doc.text(`Event Date: ${estimation.eventDate ? new Date(estimation.eventDate).toLocaleDateString() : 'N/A'}`);
+      doc.text(`Guest Count: ${estimation.guestCount || 0}`);
       doc.moveDown(0.5);
 
       // Selected Menus
       doc.fontSize(11).font('Helvetica-Bold').text('Selected Menus:', { underline: true });
-      estimation.selectedMenus?.forEach(menu => {
-        doc.fontSize(10).font('Helvetica').text(`• ${menu.menuName_en} (${menu.menuName_ta})`);
-      });
+      if (estimation.selectedMenus && estimation.selectedMenus.length > 0) {
+        estimation.selectedMenus.forEach(menu => {
+          doc.fontSize(10).font('Helvetica').text(`• ${menu.menuName_en || 'Unknown'}`);
+        });
+      }
       doc.moveDown(0.5);
 
       // Ingredient Table
@@ -57,35 +59,37 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       // Table rows
       doc.font('Helvetica').fontSize(9);
       let y = tableTop + 20;
-      estimation.ingredients?.forEach(ingredient => {
-        xPos = 50;
-        doc.text(ingredient.ingredientName_en?.substring(0, 15), xPos, y);
-        xPos += colWidths[0];
-        doc.text(ingredient.unit, xPos, y);
-        xPos += colWidths[1];
-        doc.text(ingredient.requiredQty.toFixed(2), xPos, y);
-        xPos += colWidths[2];
-        doc.text(ingredient.amount.toFixed(2), xPos, y);
-        y += 15;
-      });
+      if (estimation.ingredients && estimation.ingredients.length > 0) {
+        estimation.ingredients.forEach(ingredient => {
+          xPos = 50;
+          doc.text((ingredient.ingredientName_en || 'Unknown').substring(0, 15), xPos, y);
+          xPos += colWidths[0];
+          doc.text(ingredient.unit || 'N/A', xPos, y);
+          xPos += colWidths[1];
+          doc.text((ingredient.requiredQty || 0).toFixed(2), xPos, y);
+          xPos += colWidths[2];
+          doc.text((ingredient.amount || 0).toFixed(2), xPos, y);
+          y += 15;
+        });
+      }
 
       doc.moveDown(2);
 
       // Cost Breakdown
       doc.fontSize(11).font('Helvetica-Bold').text('Cost Breakdown:', { underline: true });
       doc.fontSize(10).font('Helvetica');
-      doc.text(`Raw Material Cost: ₹ ${estimation.rawMaterialCost?.toFixed(2)}`);
-      doc.text(`Labour Cost: ₹ ${estimation.additionalCost?.labourCost?.toFixed(2)}`);
-      doc.text(`Gas Cost: ₹ ${estimation.additionalCost?.gasCost?.toFixed(2)}`);
-      doc.text(`Transport Cost: ₹ ${estimation.additionalCost?.transportCost?.toFixed(2)}`);
-      doc.text(`Miscellaneous Cost: ₹ ${estimation.additionalCost?.miscellaneousCost?.toFixed(2)}`);
+      doc.text(`Raw Material Cost: Rs. ${(estimation.rawMaterialCost || 0).toFixed(2)}`);
+      doc.text(`Labour Cost: Rs. ${(estimation.additionalCost?.labourCost || 0).toFixed(2)}`);
+      doc.text(`Gas Cost: Rs. ${(estimation.additionalCost?.gasCost || 0).toFixed(2)}`);
+      doc.text(`Transport Cost: Rs. ${(estimation.additionalCost?.transportCost || 0).toFixed(2)}`);
+      doc.text(`Miscellaneous Cost: Rs. ${(estimation.additionalCost?.miscellaneousCost || 0).toFixed(2)}`);
       doc.moveDown(0.25);
       doc.font('Helvetica-Bold');
-      doc.text(`Profit Margin: ${estimation.profitMargin}%`);
-      doc.text(`Profit Amount: ₹ ${estimation.profitAmount?.toFixed(2)}`);
+      doc.text(`Profit Margin: ${estimation.profitMargin || 0}%`);
+      doc.text(`Profit Amount: Rs. ${(estimation.profitAmount || 0).toFixed(2)}`);
       doc.moveDown(0.25);
       doc.fontSize(12);
-      doc.text(`Grand Total: ₹ ${estimation.grandTotal?.toFixed(2)}`, { underline: true });
+      doc.text(`Grand Total: Rs. ${(estimation.grandTotal || 0).toFixed(2)}`, { underline: true });
 
       doc.end();
 

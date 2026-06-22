@@ -191,19 +191,31 @@ const EstimationsPage = () => {
 
   const handleExportExcel = async (id) => {
     try {
+      setError('');
       const blob = await estimationService.exportToExcel(id);
-      downloadFile(blob, `estimation_${id}.xlsx`);
+      if (blob && blob.size > 0) {
+        downloadFile(blob, `estimation_${id}.xlsx`);
+      } else {
+        setError('Excel file is empty');
+      }
     } catch (err) {
-      setError('Error exporting to Excel');
+      console.error('Export error:', err);
+      setError(err.message || 'Error exporting to Excel');
     }
   };
 
   const handleExportPdf = async (id) => {
     try {
+      setError('');
       const blob = await estimationService.exportToPdf(id);
-      downloadFile(blob, `estimation_${id}.pdf`);
+      if (blob && blob.size > 0) {
+        downloadFile(blob, `estimation_${id}.pdf`);
+      } else {
+        setError('PDF file is empty');
+      }
     } catch (err) {
-      setError('Error exporting to PDF');
+      console.error('Export error:', err);
+      setError(err.message || 'Error exporting to PDF');
     }
   };
 

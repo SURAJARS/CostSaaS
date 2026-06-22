@@ -86,13 +86,27 @@ class EstimationController {
         return res.status(404).json({ success: false, message: 'Estimation not found' });
       }
 
-      const workbook = await generateExcelReport(estimation, process.env.COMPANY_NAME);
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename=estimation_${estimation._id}.xlsx`);
-      
-      await workbook.xlsx.write(res);
+      try {
+        const workbook = await generateExcelReport(estimation, process.env.COMPANY_NAME);
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="estimation_${estimation._id}.xlsx"`);
+        
+        await workbook.xlsx.write(res);
+        res.end();
+      } catch (excelError) {
+        console.error('Excel generation error:', excelError);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: 'Failed to generate Excel file' });
+        } else {
+          res.end();
+        }
+      }
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error generating Excel file', error: error.message });
+      console.error('Export error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, message: 'Error exporting to Excel' });
+      }
     }
   }
 
