@@ -63,9 +63,17 @@ const AuthPage = () => {
     <Container maxWidth="sm">
       <Box sx={{ py: 8 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" align="center" sx={{ mb: 3 }}>
-            Catering Cost Estimation System
-          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
+            <img
+              src="/logo.png"
+              alt="KKCW Logo"
+              style={{
+                height: 150,
+                width: 150,
+                borderRadius: 8
+              }}
+            />
+          </Box>
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
