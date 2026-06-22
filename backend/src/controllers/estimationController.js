@@ -91,9 +91,8 @@ class EstimationController {
       res.setHeader('Content-Disposition', `attachment; filename=estimation_${estimation._id}.xlsx`);
       
       await workbook.xlsx.write(res);
-      res.end();
     } catch (error) {
-      next(error);
+      res.status(500).json({ success: false, message: 'Error generating Excel file', error: error.message });
     }
   }
 

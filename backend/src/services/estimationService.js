@@ -112,7 +112,8 @@ class EstimationService {
   async getEstimationById(id) {
     return await Estimation.findById(id)
       .populate('createdBy', 'firstName lastName email')
-      .populate('selectedMenus.menuId');
+      .populate('selectedMenus.menuId')
+      .populate('ingredients.ingredientId');
   }
 
   async updateEstimation(id, updateData) {
