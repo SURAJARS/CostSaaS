@@ -432,16 +432,20 @@ const EstimationsPage = () => {
               <Box>
                 <Typography variant="subtitle2">{t('estimations.rawMaterialByDish')}</Typography>
                 <Paper sx={{ p: 2 }}>
-                  {selectedEstimation.selectedMenus?.map((menu, idx) => (
-                    <Box key={idx} sx={{ mb: 2 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        {menu.menuName_en} ({menu.menuName_ta})
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        Quantity: {menu.quantity || 1}
-                      </Typography>
-                    </Box>
-                  ))}
+                  {selectedEstimation.selectedMenus?.map((menu, idx) => {
+                    const nameEn = menu.menuName_en || menu.menuId?.name_en || 'Unknown';
+                    const nameTa = menu.menuName_ta || menu.menuId?.name_ta || 'Unknown';
+                    return (
+                      <Box key={idx} sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                          {nameEn} ({nameTa})
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          Quantity: {menu.quantity || 1}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
                 </Paper>
               </Box>
 

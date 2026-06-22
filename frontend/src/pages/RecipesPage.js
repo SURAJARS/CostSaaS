@@ -145,6 +145,36 @@ const RecipesPage = () => {
   };
 
   const handleSave = async () => {
+    // Validate required fields
+    if (!formData.menuId) {
+      setError('Please select a menu');
+      return;
+    }
+    if (!formData.baseMembers || formData.baseMembers < 1) {
+      setError('Base members must be at least 1');
+      return;
+    }
+    if (formData.ingredients.length === 0) {
+      setError('Please add at least one ingredient');
+      return;
+    }
+    
+    // Validate each ingredient
+    for (let ing of formData.ingredients) {
+      if (!ing.ingredientId) {
+        setError('All ingredients must be selected');
+        return;
+      }
+      if (!ing.quantity || ing.quantity < 0) {
+        setError('All ingredients must have valid quantity');
+        return;
+      }
+      if (!ing.unit) {
+        setError('All ingredients must have a unit');
+        return;
+      }
+    }
+
     try {
       if (selectedRecipe) {
         await recipeService.updateRecipe(selectedRecipe._id, formData);

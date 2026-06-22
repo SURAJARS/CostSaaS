@@ -47,13 +47,13 @@ const validateRecipe = (data) => {
     baseMembers: Joi.number().min(1).required(),
     ingredients: Joi.array().items(
       Joi.object({
-        ingredientId: Joi.string().required(),
-        quantity: Joi.number().min(0).required(),
-        unit: Joi.string().required()
-      })
-    ).required(),
+        ingredientId: Joi.string().allow(''),
+        quantity: Joi.number(),
+        unit: Joi.string()
+      }).unknown(true)
+    ),
     status: Joi.string().valid('active', 'inactive')
-  });
+  }).unknown(true);
 
   return schema.validate(data);
 };
