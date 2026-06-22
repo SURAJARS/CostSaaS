@@ -1,5 +1,7 @@
 const recipeService = require('../services/recipeService');
 const { validateRecipe } = require('../validators');
+const Menu = require('../models/Menu');
+const Ingredient = require('../models/Ingredient');
 
 class RecipeController {
   async createRecipe(req, res, next) {
@@ -9,7 +11,37 @@ class RecipeController {
         return res.status(400).json({ success: false, message: error.details[0].message });
       }
 
-      const recipe = await recipeService.createRecipe(value);
+      // Fetch menu details to get names
+      const menu = await Menu.findById(value.menuId);
+      if (!menu) {
+        return res.status(404).json({ success: false, message: 'Menu not found' });
+      }
+
+      // Enrich ingredients with names
+      const enrichedIngredients = await Promise.all(
+        (value.ingredients || []).map(async (ing) => {
+          const ingredient = await Ingredient.findById(ing.ingredientId);
+          return {
+            ingredientId: ing.ingredientId,
+            ingredientName_en: ingredient?.name_en || 'Unknown',
+            ingredientName_ta: ingredient?.name_ta || 'Unknown',
+            quantity: ing.quantity,
+            unit: ing.unit
+          };
+        })
+      );
+
+      // Create enriched recipe data
+      const recipeData = {
+        menuId: value.menuId,
+        menuName_en: menu.name_en,
+        menuName_ta: menu.name_ta,
+        baseMembers: value.baseMembers,
+        ingredients: enrichedIngredients,
+        status: value.status || 'active'
+      };
+
+      const recipe = await recipeService.createRecipe(recipeData);
       res.status(201).json({ success: true, message: 'Recipe created successfully', data: recipe });
     } catch (error) {
       next(error);
@@ -65,7 +97,37 @@ class RecipeController {
         return res.status(400).json({ success: false, message: error.details[0].message });
       }
 
-      const recipe = await recipeService.updateRecipe(req.params.id, value);
+      // Fetch menu details to get names
+      const menu = await Menu.findById(value.menuId);
+      if (!menu) {
+        return res.status(404).json({ success: false, message: 'Menu not found' });
+      }
+
+      // Enrich ingredients with names
+      const enrichedIngredients = await Promise.all(
+        (value.ingredients || []).map(async (ing) => {
+          const ingredient = await Ingredient.findById(ing.ingredientId);
+          return {
+            ingredientId: ing.ingredientId,
+            ingredientName_en: ingredient?.name_en || 'Unknown',
+            ingredientName_ta: ingredient?.name_ta || 'Unknown',
+            quantity: ing.quantity,
+            unit: ing.unit
+          };
+        })
+      );
+
+      // Create enriched recipe data
+      const recipeData = {
+        menuId: value.menuId,
+        menuName_en: menu.name_en,
+        menuName_ta: menu.name_ta,
+        baseMembers: value.baseMembers,
+        ingredients: enrichedIngredients,
+        status: value.status || 'active'
+      };
+
+      const recipe = await recipeService.updateRecipe(req.params.id, recipeData);
       if (!recipe) {
         return res.status(404).json({ success: false, message: 'Recipe not found' });
       }
