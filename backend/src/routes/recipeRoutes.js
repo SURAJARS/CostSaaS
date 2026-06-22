@@ -12,8 +12,8 @@ router.post('/', authorize(['admin']), recipeController.createRecipe.bind(recipe
 
 // Read
 router.get('/', recipeController.getRecipes.bind(recipeController));
-router.get('/:id', recipeController.getRecipeById.bind(recipeController));
 router.get('/menu/:menuId', recipeController.getRecipeByMenuId.bind(recipeController));
+router.get('/:id', recipeController.getRecipeById.bind(recipeController));
 
 // Update (Admin only)
 router.put('/:id', authorize(['admin']), recipeController.updateRecipe.bind(recipeController));

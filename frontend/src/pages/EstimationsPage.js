@@ -35,6 +35,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import estimationService from '../services/estimationService';
 import menuService from '../services/menuService';
+import recipeService from '../services/recipeService';
 import DataTable from '../components/DataTable';
 import { formatCurrency, downloadFile } from '../utils/helpers';
 
@@ -56,6 +57,8 @@ const EstimationsPage = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [dishwiseIngredients, setDishwiseIngredients] = useState({});
+  const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
     mobileNumber: '',
@@ -115,10 +118,57 @@ const EstimationsPage = () => {
     setDialogOpen(true);
   };
 
-  const handleViewClick = (estimation) => {
+  const handleViewClick = async (estimation) => {
     setSelectedEstimation(estimation);
     setSelectedStatus(estimation.status || 'Draft');
     setViewDialogOpen(true);
+    
+    // Fetch dishwise ingredient details
+    await fetchDishwiseIngredients(estimation);
+  };
+
+  const fetchDishwiseIngredients = async (estimation) => {
+    if (!estimation.selectedMenus || estimation.selectedMenus.length === 0) {
+      setDishwiseIngredients({});
+      return;
+    }
+
+    setLoadingRecipes(true);
+    const dishIngredients = {};
+
+    try {
+      for (const menu of estimation.selectedMenus) {
+        const menuId = menu.menuId?._id || menu.menuId;
+        try {
+          const response = await recipeService.getRecipeByMenuId(menuId);
+          const recipe = response.data.data;
+          
+          if (recipe && recipe.ingredients) {
+            // Scale ingredients based on guest count
+            const scaleFactor = estimation.guestCount / recipe.baseMembers;
+            const scaledIngredients = recipe.ingredients.map(ing => ({
+              ...ing,
+              scaledQuantity: (ing.quantity * scaleFactor).toFixed(2)
+            }));
+            
+            dishIngredients[menuId] = {
+              menuName_en: menu.menuName_en || recipe.menuName_en,
+              menuName_ta: menu.menuName_ta || recipe.menuName_ta,
+              baseMembers: recipe.baseMembers,
+              ingredients: scaledIngredients
+            };
+          }
+        } catch (err) {
+          console.error(`Error fetching recipe for menu ${menuId}:`, err);
+        }
+      }
+      
+      setDishwiseIngredients(dishIngredients);
+    } catch (err) {
+      console.error('Error fetching dishwise ingredients:', err);
+    } finally {
+      setLoadingRecipes(false);
+    }
   };
 
   const handleDeleteClick = (id) => {
@@ -516,23 +566,47 @@ const EstimationsPage = () => {
               </Box>
 
               <Box>
-                <Typography variant="subtitle2">{t('estimations.rawMaterialByDish')}</Typography>
-                <Paper sx={{ p: 2 }}>
-                  {selectedEstimation.selectedMenus?.map((menu, idx) => {
-                    const nameEn = menu.menuName_en || menu.menuId?.name_en || 'Unknown';
-                    const nameTa = menu.menuName_ta || menu.menuId?.name_ta || 'Unknown';
-                    return (
-                      <Box key={idx} sx={{ mb: 2 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                          {nameEn} ({nameTa})
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          Quantity: {menu.quantity || 1}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
-                </Paper>
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>{t('estimations.rawMaterialByDish')}</Typography>
+                {loadingRecipes ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                    <CircularProgress size={30} />
+                  </Box>
+                ) : Object.keys(dishwiseIngredients).length > 0 ? (
+                  Object.entries(dishwiseIngredients).map(([menuId, dishData]) => (
+                    <Paper key={menuId} sx={{ p: 2, mb: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        {dishData.menuName_en} ({dishData.menuName_ta})
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 1 }}>
+                        For {selectedEstimation.guestCount} members (base: {dishData.baseMembers} members)
+                      </Typography>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>{t('estimations.ingredient')}</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Required Qty</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {dishData.ingredients.map((ing, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>
+                                {ing.ingredientName_en} ({ing.ingredientName_ta})
+                              </TableCell>
+                              <TableCell align="right">
+                                {ing.scaledQuantity} {ing.unit}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </Paper>
+                  ))
+                ) : (
+                  <Typography variant="caption" color="textSecondary">
+                    No recipe details available for selected dishes
+                  </Typography>
+                )}
               </Box>
 
               <Box sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5', p: 2, borderRadius: 1 }}>
