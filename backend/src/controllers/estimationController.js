@@ -167,6 +167,15 @@ class EstimationController {
       next(error);
     }
   }
+
+  async getAnalytics(req, res, next) {
+    try {
+      const analytics = await estimationService.getAnalytics(req.user._id, req.user.role);
+      res.status(200).json({ success: true, data: analytics });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new EstimationController();

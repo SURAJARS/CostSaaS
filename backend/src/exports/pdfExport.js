@@ -23,7 +23,7 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       doc.moveDown(0.5);
 
       // Customer Details
-      doc.fontSize(11).font('Helvetica-Bold').text('Customer Details:', { underline: true });
+      doc.fontSize(11).font('Helvetica-Bold').text('Customer Details:');
       doc.fontSize(10).font('Helvetica');
       doc.text(`Name: ${estimation.customerName || 'N/A'}`);
       doc.text(`Mobile: ${estimation.mobileNumber || 'N/A'}`);
@@ -32,7 +32,7 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       doc.moveDown(0.5);
 
       // Selected Menus
-      doc.fontSize(11).font('Helvetica-Bold').text('Selected Menus:', { underline: true });
+      doc.fontSize(11).font('Helvetica-Bold').text('Selected Menus:');
       if (estimation.selectedMenus && estimation.selectedMenus.length > 0) {
         estimation.selectedMenus.forEach(menu => {
           doc.fontSize(10).font('Helvetica').text(`• ${menu.menuName_en || 'Unknown'}`);
@@ -41,7 +41,7 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       doc.moveDown(0.5);
 
       // Ingredient Table
-      doc.fontSize(11).font('Helvetica-Bold').text('Ingredient Requirements:', { underline: true });
+      doc.fontSize(11).font('Helvetica-Bold').text('Ingredient Requirements:');
       doc.moveDown(0.25);
 
       const tableTop = doc.y;
@@ -76,7 +76,7 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       doc.moveDown(2);
 
       // Cost Breakdown
-      doc.fontSize(11).font('Helvetica-Bold').text('Cost Breakdown:', { underline: true });
+      doc.fontSize(11).font('Helvetica-Bold').text('Cost Breakdown:');
       doc.fontSize(10).font('Helvetica');
       doc.text(`Raw Material Cost: Rs. ${(estimation.rawMaterialCost || 0).toFixed(2)}`);
       doc.text(`Labour Cost: Rs. ${(estimation.additionalCost?.labourCost || 0).toFixed(2)}`);
@@ -89,7 +89,7 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       doc.text(`Profit Amount: Rs. ${(estimation.profitAmount || 0).toFixed(2)}`);
       doc.moveDown(0.25);
       doc.fontSize(12);
-      doc.text(`Grand Total: Rs. ${(estimation.grandTotal || 0).toFixed(2)}`, { underline: true });
+      doc.text(`Grand Total: Rs. ${(estimation.grandTotal || 0).toFixed(2)}`);
 
       doc.end();
 
@@ -100,7 +100,12 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
       stream.on('error', (err) => {
         reject(err);
       });
+
+      doc.on('error', (err) => {
+        reject(err);
+      });
     } catch (error) {
+      console.error('Error generating PDF report:', error);
       reject(error);
     }
   });

@@ -52,6 +52,10 @@ class EstimationService {
       params: { customerName, page, limit }
     });
   }
+
+  getAnalytics() {
+    return axiosInstance.get('/estimations/report/analytics');
+  }
 }
 
 export default new EstimationService();

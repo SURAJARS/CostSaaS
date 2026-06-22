@@ -143,6 +143,70 @@ class EstimationService {
       customerName: { $regex: customerName, $options: 'i' }
     }, skip, limit);
   }
+
+  async getAnalytics(userId, userRole) {
+    try {
+      const filter = userRole === 'staff' ? { createdBy: userId } : {};
+      
+      const estimations = await Estimation.find(filter);
+      
+      const totalEstimations = estimations.length;
+      const totalRevenue = estimations.reduce((sum, e) => sum + (e.grandTotal || 0), 0);
+      const avgProfitMargin = totalEstimations > 0 
+        ? (estimations.reduce((sum, e) => sum + (e.profitMargin || 0), 0) / totalEstimations).toFixed(2)
+        : 0;
+      
+      // Count by status
+      const statusCounts = {
+        Draft: estimations.filter(e => e.status === 'Draft').length,
+        Sent: estimations.filter(e => e.status === 'Sent').length,
+        Approved: estimations.filter(e => e.status === 'Approved').length,
+        Completed: estimations.filter(e => e.status === 'Completed').length
+      };
+      
+      // Cost comparison by menu
+      const menuCosts = {};
+      estimations.forEach(est => {
+        if (est.selectedMenus && est.selectedMenus.length > 0) {
+          est.selectedMenus.forEach(menu => {
+            const menuName = menu.menuName_en || 'Unknown';
+            if (!menuCosts[menuName]) {
+              menuCosts[menuName] = {
+                totalEstimates: 0,
+                totalProfit: 0,
+                avgCostPerGuest: 0,
+                profitMargins: []
+              };
+            }
+            menuCosts[menuName].totalEstimates++;
+            menuCosts[menuName].totalProfit += est.profitAmount || 0;
+            menuCosts[menuName].avgCostPerGuest += (est.rawMaterialCost / est.guestCount) || 0;
+            menuCosts[menuName].profitMargins.push(est.profitMargin || 0);
+          });
+        }
+      });
+      
+      // Calculate averages for menu costs
+      Object.keys(menuCosts).forEach(menu => {
+        const data = menuCosts[menu];
+        data.avgCostPerGuest = (data.avgCostPerGuest / data.totalEstimates).toFixed(2);
+        data.avgProfitMargin = (data.profitMargins.reduce((a, b) => a + b, 0) / data.profitMargins.length).toFixed(2);
+        delete data.profitMargins;
+      });
+      
+      return {
+        statistics: {
+          totalEstimations,
+          totalRevenue: totalRevenue.toFixed(2),
+          avgProfitMargin
+        },
+        statusDistribution: statusCounts,
+        menuAnalytics: menuCosts
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = new EstimationService();

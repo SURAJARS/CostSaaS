@@ -13,12 +13,16 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../hooks/useTheme';
 import MenuIcon from '@mui/icons-material/Menu';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 const Navigation = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [languageAnchor, setLanguageAnchor] = React.useState(null);
 
@@ -64,6 +68,15 @@ const Navigation = ({ onMenuClick }) => {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           {t('dashboard.title')} - Kasikannu
         </Typography>
+
+        <IconButton
+          color="inherit"
+          onClick={toggleTheme}
+          sx={{ mr: 2 }}
+          title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+        >
+          {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+        </IconButton>
 
         <Button
           color="inherit"

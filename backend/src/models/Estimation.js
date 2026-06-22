@@ -71,8 +71,8 @@ const EstimationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'confirmed', 'cancelled'],
-    default: 'draft'
+    enum: ['Draft', 'Sent', 'Approved', 'Completed'],
+    default: 'Draft'
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

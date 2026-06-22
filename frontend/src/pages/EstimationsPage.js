@@ -47,11 +47,13 @@ const EstimationsPage = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedEstimation, setSelectedEstimation] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [formData, setFormData] = useState({
     customerName: '',
     mobileNumber: '',
@@ -62,19 +64,20 @@ const EstimationsPage = () => {
     gasCost: 0,
     transportCost: 0,
     miscellaneousCost: 0,
-    profitMargin: 15
+    profitMargin: 15,
+    status: 'Draft'
   });
 
   useEffect(() => {
     fetchEstimations();
     fetchMenus();
-  }, [page, limit]);
+  }, [page, limit, statusFilter]);
 
   const fetchEstimations = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await estimationService.getEstimations(page, limit);
+      const response = await estimationService.getEstimations(page, limit, statusFilter);
       setEstimations(response.data.data);
       setTotal(response.data.pagination.total);
     } catch (err) {
@@ -112,6 +115,7 @@ const EstimationsPage = () => {
 
   const handleViewClick = (estimation) => {
     setSelectedEstimation(estimation);
+    setSelectedStatus(estimation.status || 'Draft');
     setViewDialogOpen(true);
   };
 
@@ -189,6 +193,23 @@ const EstimationsPage = () => {
     }
   };
 
+  const handleStatusUpdate = async () => {
+    if (!selectedEstimation) return;
+    try {
+      setLoading(true);
+      await estimationService.updateEstimation(selectedEstimation._id, { status: selectedStatus });
+      setError('');
+      setSuccess('Status updated successfully');
+      setViewDialogOpen(false);
+      fetchEstimations();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error updating status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleExportExcel = async (id) => {
     try {
       setError('');
@@ -228,6 +249,7 @@ const EstimationsPage = () => {
       render: (row) => new Date(row.eventDate).toLocaleDateString('en-IN')
     },
     { id: 'guestCount', label: t('estimations.guestCount') },
+    { id: 'status', label: 'Status' },
     {
       id: 'grandTotal',
       label: t('estimations.grandTotal'),
@@ -276,6 +298,26 @@ const EstimationsPage = () => {
         <Button variant="contained" color="success" onClick={handleAddClick}>
           {t('estimations.addEstimation')}
         </Button>
+      </Box>
+
+      <Box sx={{ mb: 3, minWidth: 200 }}>
+        <FormControl fullWidth>
+          <InputLabel>Filter by Status</InputLabel>
+          <Select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            label="Filter by Status"
+          >
+            <MenuItem value="">All Statuses</MenuItem>
+            <MenuItem value="Draft">Draft</MenuItem>
+            <MenuItem value="Sent">Sent to Customer</MenuItem>
+            <MenuItem value="Approved">Approved</MenuItem>
+            <MenuItem value="Completed">Completed</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       <DataTable
@@ -387,6 +429,20 @@ const EstimationsPage = () => {
             fullWidth
             inputProps={{ step: '0.01', min: '0' }}
           />
+          <FormControl fullWidth>
+            <InputLabel>Status</InputLabel>
+            <Select
+              name="status"
+              value={formData.status}
+              onChange={handleFormChange}
+              label="Status"
+            >
+              <MenuItem value="Draft">Draft</MenuItem>
+              <MenuItem value="Sent">Sent to Customer</MenuItem>
+              <MenuItem value="Approved">Approved</MenuItem>
+              <MenuItem value="Completed">Completed</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>{t('common.cancel')}</Button>
@@ -417,6 +473,22 @@ const EstimationsPage = () => {
               <Box>
                 <Typography variant="subtitle2">{t('estimations.guestCount')}</Typography>
                 <Typography>{selectedEstimation.guestCount}</Typography>
+              </Box>
+
+              <Box>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    label="Status"
+                  >
+                    <MenuItem value="Draft">Draft</MenuItem>
+                    <MenuItem value="Sent">Sent to Customer</MenuItem>
+                    <MenuItem value="Approved">Approved</MenuItem>
+                    <MenuItem value="Completed">Completed</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
 
               <Box>
@@ -500,6 +572,16 @@ const EstimationsPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setViewDialogOpen(false)}>{t('common.close')}</Button>
+          {selectedStatus !== selectedEstimation?.status && (
+            <Button 
+              onClick={handleStatusUpdate} 
+              variant="contained" 
+              color="primary"
+              disabled={loading}
+            >
+              Update Status
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

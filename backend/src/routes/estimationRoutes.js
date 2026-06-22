@@ -10,6 +10,7 @@ router.use(authenticate);
 // Reports (must be before :id routes)
 router.get('/report/date-range', estimationController.getReportsByDateRange.bind(estimationController));
 router.get('/report/customer', estimationController.getReportsByCustomer.bind(estimationController));
+router.get('/report/analytics', estimationController.getAnalytics.bind(estimationController));
 
 // Create
 router.post('/', estimationController.createEstimation.bind(estimationController));
