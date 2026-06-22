@@ -8,7 +8,8 @@ import {
   Box,
   CircularProgress,
   Paper,
-  Button
+  Button,
+  useTheme
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +22,10 @@ import estimationService from '../services/estimationService';
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const headerBgColor = theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5';
+  const headerTextColor = theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.text.primary;
+  const borderColor = theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ddd';
   const [stats, setStats] = useState({
     totalIngredients: 0,
     totalMenus: 0,
@@ -139,17 +144,17 @@ const Dashboard = () => {
           <Box sx={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid #ddd', backgroundColor: '#f5f5f5' }}>
-                  <th style={{ textAlign: 'left', padding: '12px' }}>Customer Name</th>
-                  <th style={{ textAlign: 'left', padding: '12px' }}>Event Date</th>
-                  <th style={{ textAlign: 'center', padding: '12px' }}>Guest Count</th>
-                  <th style={{ textAlign: 'center', padding: '12px' }}>Status</th>
-                  <th style={{ textAlign: 'right', padding: '12px' }}>Grand Total</th>
+                <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: headerBgColor, color: headerTextColor }}>
+                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>Customer Name</th>
+                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>Event Date</th>
+                  <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>Guest Count</th>
+                  <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>Status</th>
+                  <th style={{ textAlign: 'right', padding: '12px', color: headerTextColor }}>Grand Total</th>
                 </tr>
               </thead>
               <tbody>
                 {recentEstimations.map((est) => (
-                  <tr key={est._id} style={{ borderBottom: '1px solid #eee', '&:hover': { backgroundColor: '#f9f9f9' } }}>
+                  <tr key={est._id} style={{ borderBottom: `1px solid ${borderColor}` }}>
                     <td style={{ padding: '12px' }}>{est.customerName}</td>
                     <td style={{ padding: '12px' }}>{new Date(est.eventDate).toLocaleDateString('en-IN')}</td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>{est.guestCount}</td>

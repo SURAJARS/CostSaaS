@@ -18,6 +18,7 @@ import {
   Typography,
   Paper,
   Checkbox,
+  useTheme,
   FormControlLabel,
   Table,
   TableBody,
@@ -39,6 +40,7 @@ import { formatCurrency, downloadFile } from '../utils/helpers';
 
 const EstimationsPage = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [estimations, setEstimations] = useState([]);
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -533,7 +535,7 @@ const EstimationsPage = () => {
                 </Paper>
               </Box>
 
-              <Box sx={{ backgroundColor: '#f5f5f5', p: 2, borderRadius: 1 }}>
+              <Box sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5', p: 2, borderRadius: 1 }}>
                 <Grid container spacing={1}>
                   <Grid item xs={6}>
                     <Typography variant="subtitle2">{t('estimations.rawMaterialCost')}</Typography>

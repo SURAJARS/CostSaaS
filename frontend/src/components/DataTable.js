@@ -9,21 +9,27 @@ import {
   Paper,
   TablePagination,
   Box,
-  CircularProgress
+  CircularProgress,
+  useTheme
 } from '@mui/material';
 
 const DataTable = ({ columns, rows, loading = false, pagination = null, onPageChange, onRowsPerPageChange }) => {
+  const theme = useTheme();
+  
+  const headerBgColor = theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5';
+  const headerTextColor = theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.text.primary;
+
   return (
     <Box>
       <TableContainer component={Paper}>
         <Table>
-          <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+          <TableHead sx={{ backgroundColor: headerBgColor }}>
             <TableRow>
               {columns.map((column) => (
                 <TableCell
                   key={column.id}
                   align={column.align || 'left'}
-                  sx={{ fontWeight: 'bold' }}
+                  sx={{ fontWeight: 'bold', color: headerTextColor }}
                 >
                   {column.label}
                 </TableCell>

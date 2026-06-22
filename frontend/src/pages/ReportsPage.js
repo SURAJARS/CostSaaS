@@ -13,7 +13,8 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableRow
+  TableRow,
+  useTheme
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -22,6 +23,7 @@ import { formatCurrency, downloadFile } from '../utils/helpers';
 
 const ReportsPage = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [reportType, setReportType] = useState('dateRange');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -191,7 +193,7 @@ const ReportsPage = () => {
           <Paper sx={{ overflowX: 'auto' }}>
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableRow sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5' }}>
                   <TableCell>{t('estimations.customerName')}</TableCell>
                   <TableCell>{t('estimations.mobileNumber')}</TableCell>
                   <TableCell>{t('estimations.eventDate')}</TableCell>
