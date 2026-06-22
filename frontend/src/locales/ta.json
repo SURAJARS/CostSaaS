@@ -138,6 +138,7 @@
   },
   "estimations": {
     "title": "மதிப்பீடுகள்",
+    "createEstimation": "மதிப்பீடு உருவாக்க",
     "customerName": "வாடிக்கையாளர் பெயர்",
     "mobileNumber": "செல்லுலார் எண்",
     "eventDate": "நிகழ்வு தேதி",
@@ -157,6 +158,7 @@
     "amount": "தொகை",
     "totalCost": "மொத்த செலவு",
     "rawMaterialCost": "மூலப்பொருட்களின் செலவு",
+    "rawMaterialByDish": "உணவு வாரியாக மூலப்பொருள்",
     "additionalCost": "கூடுதல் செலவு",
     "labourCost": "உழைப்பு செலவு",
     "gasCost": "வாயு செலவு",

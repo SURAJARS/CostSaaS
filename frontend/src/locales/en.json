@@ -126,6 +126,7 @@
   },
   "estimations": {
     "title": "Estimations",
+    "createEstimation": "Create Estimation",
     "customerName": "Customer Name",
     "mobileNumber": "Mobile Number",
     "eventDate": "Event Date",
@@ -144,6 +145,7 @@
     "amount": "Amount",
     "totalCost": "Total Cost",
     "rawMaterialCost": "Raw Material Cost",
+    "rawMaterialByDish": "Raw Material by Dish",
     "labourCost": "Labour Cost",
     "gasCost": "Gas Cost",
     "transportCost": "Transport Cost",

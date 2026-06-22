@@ -1,6 +1,7 @@
 const Estimation = require('../models/Estimation');
 const Recipe = require('../models/Recipe');
 const Ingredient = require('../models/Ingredient');
+const Menu = require('../models/Menu');
 const {
   consolidateIngredients,
   calculateIngredientCost,
@@ -16,6 +17,16 @@ class EstimationService {
       // Get recipes for selected menus
       const recipes = await Recipe.find({ menuId: { $in: menuIds }, status: 'active' })
         .populate('ingredients.ingredientId');
+
+      // Get menu details for names
+      const menuDetails = await Menu.find({ _id: { $in: menuIds } });
+      const menuMap = {};
+      menuDetails.forEach(menu => {
+        menuMap[menu._id.toString()] = {
+          name_en: menu.name_en,
+          name_ta: menu.name_ta
+        };
+      });
 
       // Build menu ingredients structure
       const menuIngredients = recipes.map(recipe => ({
@@ -56,13 +67,21 @@ class EstimationService {
         estimationData.profitMargin || 0
       );
 
+      // Enrich selectedMenus with menu names
+      const enrichedSelectedMenus = estimationData.selectedMenus.map(menu => ({
+        menuId: menu.menuId,
+        menuName_en: menuMap[menu.menuId]?.name_en || 'Unknown',
+        menuName_ta: menuMap[menu.menuId]?.name_ta || 'Unknown',
+        quantity: menu.quantity || 1
+      }));
+
       // Create estimation document
       const estimation = new Estimation({
         customerName: estimationData.customerName,
         mobileNumber: estimationData.mobileNumber,
         eventDate: estimationData.eventDate,
         guestCount: estimationData.guestCount,
-        selectedMenus: estimationData.selectedMenus,
+        selectedMenus: enrichedSelectedMenus,
         ingredients: ingredientWithCosts,
         rawMaterialCost,
         additionalCost,

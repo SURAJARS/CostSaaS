@@ -7,9 +7,12 @@ import {
   Typography,
   Box,
   CircularProgress,
-  Paper
+  Paper,
+  Button
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import AddIcon from '@mui/icons-material/Add';
 import ingredientService from '../services/ingredientService';
 import menuService from '../services/menuService';
 import recipeService from '../services/recipeService';
@@ -17,6 +20,7 @@ import estimationService from '../services/estimationService';
 
 const Dashboard = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalIngredients: 0,
     totalMenus: 0,
@@ -109,9 +113,20 @@ const Dashboard = () => {
       </Grid>
 
       <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          {t('dashboard.recentEstimations')}
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">
+            {t('dashboard.recentEstimations')}
+          </Typography>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/estimations')}
+            size="small"
+          >
+            {t('estimations.createEstimation')}
+          </Button>
+        </Box>
         <Typography color="textSecondary">
           Recent estimations data will be displayed here
         </Typography>

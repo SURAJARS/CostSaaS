@@ -57,7 +57,7 @@ const Navigation = ({ onMenuClick }) => {
           color="inherit"
           edge="start"
           onClick={onMenuClick}
-          sx={{ mr: 2, display: { sm: 'none' } }}
+          sx={{ mr: 2 }}
         >
           <MenuIcon />
         </IconButton>

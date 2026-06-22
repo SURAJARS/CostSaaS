@@ -429,6 +429,22 @@ const EstimationsPage = () => {
                 </Table>
               </Box>
 
+              <Box>
+                <Typography variant="subtitle2">{t('estimations.rawMaterialByDish')}</Typography>
+                <Paper sx={{ p: 2 }}>
+                  {selectedEstimation.selectedMenus?.map((menu, idx) => (
+                    <Box key={idx} sx={{ mb: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        {menu.menuName_en} ({menu.menuName_ta})
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        Quantity: {menu.quantity || 1}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Paper>
+              </Box>
+
               <Box sx={{ backgroundColor: '#f5f5f5', p: 2, borderRadius: 1 }}>
                 <Grid container spacing={1}>
                   <Grid item xs={6}>
