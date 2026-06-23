@@ -322,6 +322,10 @@ const RecipesPage = () => {
                   <MenuItem value="kg">kg</MenuItem>
                   <MenuItem value="gm">gm</MenuItem>
                   <MenuItem value="liter">liter</MenuItem>
+                  <MenuItem value="ml">ml</MenuItem>
+                  <MenuItem value="pcs">pcs</MenuItem>
+                  <MenuItem value="dozen">dozen</MenuItem>
+                  <MenuItem value="box">box</MenuItem>
                 </Select>
               </FormControl>
               <IconButton size="small" onClick={() => handleRemoveIngredient(index)} color="error">
