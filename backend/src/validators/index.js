@@ -22,7 +22,7 @@ const validateIngredient = (data) => {
     currentRate: Joi.number().min(0).required(),
     category: Joi.string().valid('dal', 'spices', 'oil', 'vegetables', 'grains', 'dairy', 'condiments', 'others').required(),
     status: Joi.string().valid('active', 'inactive'),
-    description: Joi.string()
+    description: Joi.string().allow('', null).optional()
   });
 
   return schema.validate(data);
