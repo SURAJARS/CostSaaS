@@ -33,8 +33,8 @@ const validateMenu = (data) => {
     name_en: Joi.string().required(),
     name_ta: Joi.string().required(),
     category: Joi.string().valid('breakfast', 'lunch', 'dinner', 'snacks', 'sweets').required(),
-    description_en: Joi.string(),
-    description_ta: Joi.string(),
+    description_en: Joi.string().allow('', null).optional(),
+    description_ta: Joi.string().allow('', null).optional(),
     status: Joi.string().valid('active', 'inactive')
   });
 
