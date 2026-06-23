@@ -48,7 +48,10 @@ class IngredientController {
 
   async updateIngredient(req, res, next) {
     try {
-      const { error, value } = validateIngredient(req.body);
+      // Remove immutable Mongoose fields from request body
+      const { _id, __v, createdAt, updatedAt, ...dataToUpdate } = req.body;
+      
+      const { error, value } = validateIngredient(dataToUpdate);
       if (error) {
         return res.status(400).json({ success: false, message: error.details[0].message });
       }

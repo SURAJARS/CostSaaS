@@ -92,7 +92,10 @@ class RecipeController {
 
   async updateRecipe(req, res, next) {
     try {
-      const { error, value } = validateRecipe(req.body);
+      // Remove immutable Mongoose fields from request body
+      const { _id, __v, createdAt, updatedAt, ...dataToUpdate } = req.body;
+      
+      const { error, value } = validateRecipe(dataToUpdate);
       if (error) {
         return res.status(400).json({ success: false, message: error.details[0].message });
       }
