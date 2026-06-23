@@ -294,6 +294,23 @@ const EstimationsPage = () => {
 
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
+    
+    // If guest count is changed, recalculate all ingredient quantities
+    if (name === 'guestCount' && selectedEstimation) {
+      const newGuestCount = parseInt(value) || 1;
+      const originalGuestCount = selectedEstimation.guestCount;
+      const scaleFactor = newGuestCount / originalGuestCount;
+      
+      // Scale all existing ingredient quantities
+      const scaledIngredients = {};
+      selectedEstimation.ingredients?.forEach(ing => {
+        const originalQty = editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty;
+        scaledIngredients[ing._id] = parseFloat((originalQty * scaleFactor).toFixed(2));
+      });
+      
+      setEditedIngredients(scaledIngredients);
+    }
+    
     setEditFormData(prev => ({
       ...prev,
       [name]: value
