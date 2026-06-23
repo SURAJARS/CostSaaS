@@ -72,7 +72,7 @@ const EstimationsPage = () => {
     gasCost: 0,
     transportCost: 0,
     miscellaneousCost: 0,
-    profitMargin: 15,
+    profitMargin: 0,
     status: 'Draft'
   });
 
@@ -138,7 +138,7 @@ const EstimationsPage = () => {
       gasCost: estimation.gasCost || 0,
       transportCost: estimation.transportCost || 0,
       miscellaneousCost: estimation.miscellaneousCost || 0,
-      profitMargin: estimation.profitMargin || 15
+      profitMargin: estimation.profitMargin || 0
     });
     const ingredientMap = {};
     estimation.ingredients?.forEach(ing => {
@@ -760,6 +760,7 @@ const EstimationsPage = () => {
                               size="small"
                               value={editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty}
                               onChange={(e) => handleIngredientQtyChange(ing._id, e.target.value)}
+                              disabled={true}
                               inputProps={{ step: '0.01', min: '0', style: { textAlign: 'right' } }}
                               sx={{ width: '100px' }}
                             />
