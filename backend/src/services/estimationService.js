@@ -38,13 +38,15 @@ class EstimationService {
       // Consolidate ingredients
       let consolidatedIngredients = consolidateIngredients(menuIngredients, estimationData.guestCount);
 
-      // Get current rates
+      // Get current rates and ingredient units
       consolidatedIngredients = await Promise.all(
         consolidatedIngredients.map(async (ing) => {
           const ingredient = await Ingredient.findById(ing.ingredientId);
           return {
             ...ing,
-            currentRate: ingredient?.currentRate || 0
+            currentRate: ingredient?.currentRate || 0,
+            ingredientUnit: ingredient?.unit || 'kg', // The ingredient's base unit
+            recipeUnit: ing.unit // The unit used in recipe
           };
         })
       );

@@ -1,3 +1,31 @@
+// Unit conversion function
+const convertUnit = (quantity, fromUnit, toUnit) => {
+  if (fromUnit === toUnit) return quantity;
+
+  // Conversion factors to base units (gm for weight, ml for volume)
+  const weightConversions = { 'kg': 1000, 'gm': 1 };
+  const volumeConversions = { 'liter': 1000, 'ml': 1 };
+  const countUnits = { 'pcs': 1, 'dozen': 1, 'box': 1 };
+
+  // Weight conversions (kg <-> gm)
+  if (weightConversions[fromUnit] && weightConversions[toUnit]) {
+    return (quantity * weightConversions[fromUnit]) / weightConversions[toUnit];
+  }
+
+  // Volume conversions (liter <-> ml)
+  if (volumeConversions[fromUnit] && volumeConversions[toUnit]) {
+    return (quantity * volumeConversions[fromUnit]) / volumeConversions[toUnit];
+  }
+
+  // Count units remain the same (no conversion between pcs, dozen, box)
+  if (countUnits[fromUnit] && countUnits[toUnit]) {
+    return quantity;
+  }
+
+  // No conversion possible between different unit types, return original
+  return quantity;
+};
+
 // Calculate required quantity based on base recipe and guest count
 const calculateRequiredQty = (baseQty, guestCount, baseMembers) => {
   return (baseQty * guestCount) / baseMembers;
@@ -37,10 +65,15 @@ const consolidateIngredients = (menuIngredients, guestCount) => {
 
 // Calculate cost for each ingredient
 const calculateIngredientCost = (ingredients) => {
-  return ingredients.map(ing => ({
-    ...ing,
-    amount: ing.requiredQty * ing.currentRate
-  }));
+  return ingredients.map(ing => {
+    // Convert required quantity from recipe unit to ingredient's base unit
+    const convertedQty = convertUnit(ing.requiredQty, ing.recipeUnit, ing.ingredientUnit);
+    const amount = convertedQty * ing.currentRate;
+    return {
+      ...ing,
+      amount
+    };
+  });
 };
 
 // Calculate total raw material cost
@@ -66,6 +99,7 @@ const calculateGrandTotal = (rawMaterialCost, additionalCost, profitMargin) => {
 };
 
 module.exports = {
+  convertUnit,
   calculateRequiredQty,
   consolidateIngredients,
   calculateIngredientCost,
