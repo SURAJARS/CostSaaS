@@ -53,15 +53,31 @@ class EstimationController {
 
   async updateEstimation(req, res, next) {
     try {
-      const updateData = req.body;
-      const estimation = await estimationService.updateEstimation(req.params.id, {
-        ...updateData,
-        updatedAt: new Date()
-      });
+      const estimation = await estimationService.getEstimationById(req.params.id);
       if (!estimation) {
         return res.status(404).json({ success: false, message: 'Estimation not found' });
       }
-      res.status(200).json({ success: true, message: 'Estimation updated successfully', data: estimation });
+
+      // Check if estimation is locked (Approved or Completed)
+      const isLocked = estimation.status === 'Approved' || estimation.status === 'Completed';
+      const isOnlyStatusChange = Object.keys(req.body).length === 1 && req.body.status;
+
+      if (isLocked && !isOnlyStatusChange) {
+        return res.status(403).json({ 
+          success: false, 
+          message: `Cannot edit estimation with status "${estimation.status}". Only status changes are allowed.` 
+        });
+      }
+
+      const updateData = req.body;
+      const updatedEstimation = await estimationService.updateEstimation(req.params.id, {
+        ...updateData,
+        updatedAt: new Date()
+      });
+      if (!updatedEstimation) {
+        return res.status(404).json({ success: false, message: 'Estimation not found' });
+      }
+      res.status(200).json({ success: true, message: 'Estimation updated successfully', data: updatedEstimation });
     } catch (error) {
       next(error);
     }

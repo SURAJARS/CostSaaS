@@ -59,6 +59,8 @@ const EstimationsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [dishwiseIngredients, setDishwiseIngredients] = useState({});
   const [loadingRecipes, setLoadingRecipes] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
   const [formData, setFormData] = useState({
     customerName: '',
     mobileNumber: '',
@@ -118,9 +120,25 @@ const EstimationsPage = () => {
     setDialogOpen(true);
   };
 
+  const isEstimationEditable = (status) => {
+    return status !== 'Approved' && status !== 'Completed';
+  };
+
   const handleViewClick = async (estimation) => {
     setSelectedEstimation(estimation);
     setSelectedStatus(estimation.status || 'Draft');
+    setEditMode(false);
+    setEditFormData({
+      customerName: estimation.customerName,
+      mobileNumber: estimation.mobileNumber,
+      eventDate: estimation.eventDate?.split('T')[0],
+      guestCount: estimation.guestCount,
+      labourCost: estimation.labourCost || 0,
+      gasCost: estimation.gasCost || 0,
+      transportCost: estimation.transportCost || 0,
+      miscellaneousCost: estimation.miscellaneousCost || 0,
+      profitMargin: estimation.profitMargin || 15
+    });
     setViewDialogOpen(true);
     
     // Fetch dishwise ingredient details
@@ -257,6 +275,52 @@ const EstimationsPage = () => {
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.response?.data?.message || 'Error updating status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditClick = () => {
+    if (isEstimationEditable(selectedEstimation?.status)) {
+      setEditMode(true);
+    }
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleEditSave = async () => {
+    if (!editFormData.customerName || !editFormData.mobileNumber || !editFormData.eventDate) {
+      setError('Please fill all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = {
+        customerName: editFormData.customerName,
+        mobileNumber: editFormData.mobileNumber,
+        eventDate: editFormData.eventDate,
+        guestCount: parseInt(editFormData.guestCount),
+        labourCost: parseFloat(editFormData.labourCost) || 0,
+        gasCost: parseFloat(editFormData.gasCost) || 0,
+        transportCost: parseFloat(editFormData.transportCost) || 0,
+        miscellaneousCost: parseFloat(editFormData.miscellaneousCost) || 0,
+        profitMargin: parseFloat(editFormData.profitMargin) || 0
+      };
+      await estimationService.updateEstimation(selectedEstimation._id, payload);
+      setError('');
+      setSuccess('Estimation updated successfully');
+      setEditMode(false);
+      fetchEstimations();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error updating estimation');
     } finally {
       setLoading(false);
     }
@@ -506,26 +570,121 @@ const EstimationsPage = () => {
 
       {/* View Dialog */}
       <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('estimations.viewEstimation')}</DialogTitle>
+        <DialogTitle>
+          {editMode ? `${t('estimations.editEstimation')} - ${selectedEstimation?.customerName}` : t('estimations.viewEstimation')}
+        </DialogTitle>
+        {!isEstimationEditable(selectedEstimation?.status) && !editMode && (
+          <Alert severity="info" sx={{ mx: 2, mt: 2 }}>
+            This estimation is locked as its status is "{selectedEstimation?.status}". Status changes cannot be made.
+          </Alert>
+        )}
         <DialogContent sx={{ pt: 2 }}>
           {selectedEstimation && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box>
-                <Typography variant="subtitle2">{t('estimations.customerName')}</Typography>
-                <Typography>{selectedEstimation.customerName}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2">{t('estimations.mobileNumber')}</Typography>
-                <Typography>{selectedEstimation.mobileNumber}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2">{t('estimations.eventDate')}</Typography>
-                <Typography>{new Date(selectedEstimation.eventDate).toLocaleDateString('en-IN')}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2">{t('estimations.guestCount')}</Typography>
-                <Typography>{selectedEstimation.guestCount}</Typography>
-              </Box>
+              {editMode ? (
+                <>
+                  <TextField
+                    label={t('estimations.customerName')}
+                    name="customerName"
+                    value={editFormData.customerName}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    required
+                  />
+                  <TextField
+                    label={t('estimations.mobileNumber')}
+                    name="mobileNumber"
+                    value={editFormData.mobileNumber}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    required
+                  />
+                  <TextField
+                    label={t('estimations.eventDate')}
+                    name="eventDate"
+                    type="date"
+                    value={editFormData.eventDate}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    required
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    label={t('estimations.guestCount')}
+                    name="guestCount"
+                    type="number"
+                    value={editFormData.guestCount}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    required
+                    inputProps={{ min: 1 }}
+                  />
+                  <TextField
+                    label={t('estimations.labourCost')}
+                    name="labourCost"
+                    type="number"
+                    value={editFormData.labourCost}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    inputProps={{ step: '0.01', min: '0' }}
+                  />
+                  <TextField
+                    label={t('estimations.gasCost')}
+                    name="gasCost"
+                    type="number"
+                    value={editFormData.gasCost}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    inputProps={{ step: '0.01', min: '0' }}
+                  />
+                  <TextField
+                    label={t('estimations.transportCost')}
+                    name="transportCost"
+                    type="number"
+                    value={editFormData.transportCost}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    inputProps={{ step: '0.01', min: '0' }}
+                  />
+                  <TextField
+                    label={t('estimations.miscellaneousCost')}
+                    name="miscellaneousCost"
+                    type="number"
+                    value={editFormData.miscellaneousCost}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    inputProps={{ step: '0.01', min: '0' }}
+                  />
+                  <TextField
+                    label={t('estimations.profitMargin') + ' (%)'}
+                    name="profitMargin"
+                    type="number"
+                    value={editFormData.profitMargin}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    inputProps={{ step: '0.01', min: '0' }}
+                  />
+                </>
+              ) : (
+                <>
+                  <Box>
+                    <Typography variant="subtitle2">{t('estimations.customerName')}</Typography>
+                    <Typography>{selectedEstimation.customerName}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2">{t('estimations.mobileNumber')}</Typography>
+                    <Typography>{selectedEstimation.mobileNumber}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2">{t('estimations.eventDate')}</Typography>
+                    <Typography>{new Date(selectedEstimation.eventDate).toLocaleDateString('en-IN')}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2">{t('estimations.guestCount')}</Typography>
+                    <Typography>{selectedEstimation.guestCount}</Typography>
+                  </Box>
+                </>
+              )}
 
               <Box>
                 <FormControl fullWidth>
@@ -534,6 +693,7 @@ const EstimationsPage = () => {
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     label="Status"
+                    disabled={!isEstimationEditable(selectedEstimation?.status) || editMode}
                   >
                     <MenuItem value="Draft">Draft</MenuItem>
                     <MenuItem value="Sent">Sent to Customer</MenuItem>
@@ -647,16 +807,40 @@ const EstimationsPage = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>{t('common.close')}</Button>
-          {selectedStatus !== selectedEstimation?.status && (
-            <Button 
-              onClick={handleStatusUpdate} 
-              variant="contained" 
-              color="primary"
-              disabled={loading}
-            >
-              Update Status
-            </Button>
+          {editMode ? (
+            <>
+              <Button onClick={() => setEditMode(false)}>{t('common.cancel')}</Button>
+              <Button 
+                onClick={handleEditSave} 
+                variant="contained" 
+                color="primary"
+                disabled={loading}
+              >
+                {t('common.save')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={() => setViewDialogOpen(false)}>{t('common.close')}</Button>
+              {isEstimationEditable(selectedEstimation?.status) && (
+                <Button 
+                  onClick={handleEditClick} 
+                  variant="outlined"
+                >
+                  Edit
+                </Button>
+              )}
+              {selectedStatus !== selectedEstimation?.status && isEstimationEditable(selectedEstimation?.status) && (
+                <Button 
+                  onClick={handleStatusUpdate} 
+                  variant="contained" 
+                  color="primary"
+                  disabled={loading}
+                >
+                  Update Status
+                </Button>
+              )}
+            </>
           )}
         </DialogActions>
       </Dialog>
