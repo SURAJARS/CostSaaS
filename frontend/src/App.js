@@ -64,10 +64,10 @@ const AppContent = () => {
             path="/*"
             element={
               <ProtectedRoute>
-                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%', overflow: 'hidden' }}>
                   <Navigation onMenuClick={() => setSidebarOpen(true)} />
                   <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-                  <main style={{ flex: 1 }}>
+                  <main style={{ flex: 1, width: '100%', overflow: 'auto' }}>
                     <Routes>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/ingredients" element={<IngredientsPage />} />

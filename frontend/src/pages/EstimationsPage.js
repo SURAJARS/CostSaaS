@@ -427,11 +427,11 @@ const EstimationsPage = () => {
             }}
             label="Filter by Status"
           >
-            <MenuItem value="">All Statuses</MenuItem>
-            <MenuItem value="Draft">Draft</MenuItem>
-            <MenuItem value="Sent">Sent to Customer</MenuItem>
-            <MenuItem value="Approved">Approved</MenuItem>
-            <MenuItem value="Completed">Completed</MenuItem>
+            <MenuItem value="">{t('common.all')} {t('estimations.status')}</MenuItem>
+            <MenuItem value="Draft">{t('estimations.draft')}</MenuItem>
+            <MenuItem value="Sent">{t('estimations.sentToCustomer')}</MenuItem>
+            <MenuItem value="Approved">{t('estimations.approved')}</MenuItem>
+            <MenuItem value="Completed">{t('estimations.completed')}</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -553,10 +553,10 @@ const EstimationsPage = () => {
               onChange={handleFormChange}
               label="Status"
             >
-              <MenuItem value="Draft">Draft</MenuItem>
-              <MenuItem value="Sent">Sent to Customer</MenuItem>
-              <MenuItem value="Approved">Approved</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
+              <MenuItem value="Draft">{t('estimations.draft')}</MenuItem>
+              <MenuItem value="Sent">{t('estimations.sentToCustomer')}</MenuItem>
+              <MenuItem value="Approved">{t('estimations.approved')}</MenuItem>
+              <MenuItem value="Completed">{t('estimations.completed')}</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
@@ -695,10 +695,10 @@ const EstimationsPage = () => {
                     label="Status"
                     disabled={!isEstimationEditable(selectedEstimation?.status) || editMode}
                   >
-                    <MenuItem value="Draft">Draft</MenuItem>
-                    <MenuItem value="Sent">Sent to Customer</MenuItem>
-                    <MenuItem value="Approved">Approved</MenuItem>
-                    <MenuItem value="Completed">Completed</MenuItem>
+                    <MenuItem value="Draft">{t('estimations.draft')}</MenuItem>
+                    <MenuItem value="Sent">{t('estimations.sentToCustomer')}</MenuItem>
+                    <MenuItem value="Approved">{t('estimations.approved')}</MenuItem>
+                    <MenuItem value="Completed">{t('estimations.completed')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>

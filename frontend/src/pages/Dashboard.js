@@ -88,8 +88,8 @@ const Dashboard = () => {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 2, px: { xs: 1, sm: 2, md: 3 } }}>
+      <Typography variant="h4" sx={{ mb: 3, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
         {t('dashboard.title')}
       </Typography>
 
@@ -145,11 +145,11 @@ const Dashboard = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: headerBgColor, color: headerTextColor }}>
-                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>Customer Name</th>
-                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>Event Date</th>
-                  <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>Guest Count</th>
-                  <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>Status</th>
-                  <th style={{ textAlign: 'right', padding: '12px', color: headerTextColor }}>Grand Total</th>
+                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>{t('dashboard.customerName')}</th>
+                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>{t('dashboard.eventDate')}</th>
+                  <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>{t('dashboard.guestCount')}</th>
+                  <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>{t('dashboard.status')}</th>
+                  <th style={{ textAlign: 'right', padding: '12px', color: headerTextColor }}>{t('dashboard.grandTotal')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,14 +204,14 @@ const Dashboard = () => {
       {analytics && (
         <>
           <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-            Quick Statistics
+            {t('dashboard.quickStatistics')}
           </Typography>
           <Grid container spacing={2} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
                   <Typography color="textSecondary" gutterBottom>
-                    Total Estimations
+                    {t('dashboard.totalEstimations')}
                   </Typography>
                   <Typography variant="h5">
                     {analytics.statistics.totalEstimations}
@@ -223,7 +223,7 @@ const Dashboard = () => {
               <Card>
                 <CardContent>
                   <Typography color="textSecondary" gutterBottom>
-                    Total Revenue
+                    {t('dashboard.totalRevenue')}
                   </Typography>
                   <Typography variant="h5" sx={{ color: 'success.main' }}>
                     Rs. {analytics.statistics.totalRevenue}
@@ -235,7 +235,7 @@ const Dashboard = () => {
               <Card>
                 <CardContent>
                   <Typography color="textSecondary" gutterBottom>
-                    Avg Profit Margin
+                    {t('dashboard.avgProfitMargin')}
                   </Typography>
                   <Typography variant="h5" sx={{ color: 'info.main' }}>
                     {analytics.statistics.avgProfitMargin}%
@@ -247,7 +247,7 @@ const Dashboard = () => {
               <Card>
                 <CardContent>
                   <Typography color="textSecondary" gutterBottom>
-                    Draft Estimations
+                    {t('dashboard.draftEstimations')}
                   </Typography>
                   <Typography variant="h5" sx={{ color: 'warning.main' }}>
                     {analytics.statusDistribution?.Draft || 0}
@@ -259,7 +259,7 @@ const Dashboard = () => {
 
           {/* Status Distribution */}
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Estimation Status Distribution
+            {t('dashboard.estimationStatusDistribution')}
           </Typography>
           <Grid container spacing={2} sx={{ mb: 4 }}>
             <Grid item xs={6} sm={3}>
