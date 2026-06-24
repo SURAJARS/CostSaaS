@@ -61,6 +61,9 @@ const EstimationsPage = () => {
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState({});
+  const [editedIngredients, setEditedIngredients] = useState({});
+  const [editedAmounts, setEditedAmounts] = useState({});
+  const [editedAmounts, setEditedAmounts] = useState({});
   const [formData, setFormData] = useState({
     customerName: '',
     mobileNumber: '',
@@ -71,7 +74,7 @@ const EstimationsPage = () => {
     gasCost: 0,
     transportCost: 0,
     miscellaneousCost: 0,
-    profitMargin: 15,
+    profitMargin: 0,
     status: 'Draft'
   });
 
@@ -137,8 +140,16 @@ const EstimationsPage = () => {
       gasCost: estimation.gasCost || 0,
       transportCost: estimation.transportCost || 0,
       miscellaneousCost: estimation.miscellaneousCost || 0,
-      profitMargin: estimation.profitMargin || 15
+      profitMargin: estimation.profitMargin || 0
     });
+    const ingredientMap = {};
+    const amountMap = {};
+    estimation.ingredients?.forEach(ing => {
+      ingredientMap[ing._id] = ing.requiredQty;
+      amountMap[ing._id] = ing.amount;
+    });
+    setEditedIngredients(ingredientMap);
+    setEditedAmounts(amountMap);
     setViewDialogOpen(true);
     
     // Fetch dishwise ingredient details
@@ -288,9 +299,40 @@ const EstimationsPage = () => {
 
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
+    
+    // If guest count is changed, recalculate all ingredient quantities and amounts
+    if (name === 'guestCount' && selectedEstimation) {
+      const newGuestCount = parseInt(value) || 1;
+      const originalGuestCount = selectedEstimation.guestCount;
+      const scaleFactor = newGuestCount / originalGuestCount;
+      
+      // Scale all existing ingredient quantities and update amounts
+      const scaledIngredients = {};
+      const scaledAmounts = {};
+      selectedEstimation.ingredients?.forEach(ing => {
+        // Get the original quantity (from stored edit value or current value)
+        const originalQty = editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty;
+        const newQty = parseFloat((originalQty * scaleFactor).toFixed(2));
+        scaledIngredients[ing._id] = newQty;
+        
+        // Recalculate amount based on new quantity
+        scaledAmounts[ing._id] = newQty * ing.currentRate;
+      });
+      
+      setEditedIngredients(scaledIngredients);
+      setEditedAmounts(scaledAmounts);
+    }
+    
     setEditFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleIngredientQtyChange = (ingredientId, newValue) => {
+    setEditedIngredients(prev => ({
+      ...prev,
+      [ingredientId]: parseFloat(newValue) || 0
     }));
   };
 
@@ -302,6 +344,11 @@ const EstimationsPage = () => {
 
     try {
       setLoading(true);
+      const updatedIngredients = selectedEstimation.ingredients.map(ing => ({
+        ...ing,
+        requiredQty: editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty
+      }));
+
       const payload = {
         customerName: editFormData.customerName,
         mobileNumber: editFormData.mobileNumber,
@@ -311,7 +358,8 @@ const EstimationsPage = () => {
         gasCost: parseFloat(editFormData.gasCost) || 0,
         transportCost: parseFloat(editFormData.transportCost) || 0,
         miscellaneousCost: parseFloat(editFormData.miscellaneousCost) || 0,
-        profitMargin: parseFloat(editFormData.profitMargin) || 0
+        profitMargin: parseFloat(editFormData.profitMargin) || 0,
+        ingredients: updatedIngredients
       };
       await estimationService.updateEstimation(selectedEstimation._id, payload);
       setError('');
@@ -569,7 +617,12 @@ const EstimationsPage = () => {
       </Dialog>
 
       {/* View Dialog */}
-      <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={viewDialogOpen} onClose={() => {
+        setViewDialogOpen(false);
+        setEditMode(false);
+        setEditedIngredients({});
+        setEditedAmounts({});
+      }} maxWidth="sm" fullWidth>
         <DialogTitle>
           {editMode ? `${t('estimations.editEstimation')} - ${selectedEstimation?.customerName}` : t('estimations.viewEstimation')}
         </DialogTitle>
@@ -717,8 +770,22 @@ const EstimationsPage = () => {
                     {selectedEstimation.ingredients?.map((ing, index) => (
                       <TableRow key={index}>
                         <TableCell>{ing.ingredientName_en}</TableCell>
-                        <TableCell align="right">{ing.requiredQty.toFixed(2)} {ing.unit}</TableCell>
-                        <TableCell align="right">{formatCurrency(ing.amount)}</TableCell>
+                        <TableCell align="right">
+                          {editMode && isEstimationEditable(selectedEstimation?.status) ? (
+                            <TextField
+                              type="number"
+                              size="small"
+                              value={editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty}
+                              onChange={(e) => handleIngredientQtyChange(ing._id, e.target.value)}
+                              disabled={true}
+                              inputProps={{ step: '0.01', min: '0', style: { textAlign: 'right' } }}
+                              sx={{ width: '100px' }}
+                            />
+                          ) : (
+                            `${ing.requiredQty.toFixed(2)} ${ing.unit}`
+                          )}
+                        </TableCell>
+                        <TableCell align="right">{formatCurrency(editedAmounts[ing._id] !== undefined ? editedAmounts[ing._id] : ing.amount)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
