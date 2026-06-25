@@ -7,7 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider as CustomThemeProvider } from './context/ThemeContext';
 import { useTheme } from './hooks/useTheme';
 
-// Components
+// Components all
 import Navigation from './components/Navigation';
 import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
