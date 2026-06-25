@@ -30,4 +30,5 @@ class MenuService {
   }
 }
 
-export default new MenuService();
+const menuService = new MenuService();
+export default menuService;

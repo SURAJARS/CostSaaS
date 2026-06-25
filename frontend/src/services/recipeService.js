@@ -28,4 +28,5 @@ class RecipeService {
   }
 }
 
-export default new RecipeService();
+const recipeService = new RecipeService();
+export default recipeService;
