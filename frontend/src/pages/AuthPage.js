@@ -120,9 +120,7 @@ const AuthPage = () => {
               </Button>
 
               <Typography align="center" sx={{ mt: 2, fontSize: '0.875rem' }}>
-                Demo Credentials:<br/>
-                Admin: admin@example.com / admin123<br/>
-                Staff: staff@example.com / staff123
+                
               </Typography>
             </Box>
           )}
