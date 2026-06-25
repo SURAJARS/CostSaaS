@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Box,
   Button,
   TextField,
-  CircularProgress,
   Alert,
   Dialog,
   DialogTitle,
@@ -46,9 +45,9 @@ const MenusPage = () => {
 
   useEffect(() => {
     fetchMenus();
-  }, [page, limit]);
+  }, [fetchMenus]);
 
-  const fetchMenus = async () => {
+  const fetchMenus = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -60,7 +59,7 @@ const MenusPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit]);
 
   const handleSearch = async (e) => {
     e.preventDefault();

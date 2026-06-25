@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Box,
@@ -14,7 +14,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
   Typography,
   Paper,
   Checkbox,
@@ -78,9 +77,9 @@ const EstimationsPage = () => {
   useEffect(() => {
     fetchEstimations();
     fetchMenus();
-  }, [page, limit]);
+  }, [fetchEstimations, fetchMenus]);
 
-  const fetchEstimations = async () => {
+  const fetchEstimations = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -92,16 +91,16 @@ const EstimationsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit]);
 
-  const fetchMenus = async () => {
+  const fetchMenus = useCallback(async () => {
     try {
       const response = await menuService.getMenus(1, 100);
       setMenus(response.data.data);
     } catch (err) {
       console.error('Error fetching menus:', err);
     }
-  };
+  }, []);
 
   const handleAddClick = () => {
     setSelectedEstimation(null);

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Box,
   Button,
-  CircularProgress,
   Alert,
   Dialog,
   DialogTitle,
@@ -16,11 +15,6 @@ import {
   MenuItem,
   TextField,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Paper,
   Autocomplete
 } from '@mui/material';
@@ -60,9 +54,9 @@ const RecipesPage = () => {
     fetchMenus();
     fetchIngredients();
     fetchExpenses();
-  }, [page, limit]);
+  }, [fetchRecipes, fetchMenus, fetchIngredients, fetchExpenses]);
 
-  const fetchRecipes = async () => {
+  const fetchRecipes = useCallback(async () => {
     setLoading(true);
     try {
       const response = await recipeService.getRecipes(page, limit);
@@ -73,34 +67,34 @@ const RecipesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit]);
 
-  const fetchMenus = async () => {
+  const fetchMenus = useCallback(async () => {
     try {
       const response = await menuService.getMenus(1, 100);
       setMenus(response.data.data);
     } catch (err) {
       console.error('Error fetching menus:', err);
     }
-  };
+  }, []);
 
-  const fetchIngredients = async () => {
+  const fetchIngredients = useCallback(async () => {
     try {
       const response = await ingredientService.getIngredients(1, 100);
       setIngredients(response.data.data);
     } catch (err) {
       console.error('Error fetching ingredients:', err);
     }
-  };
+  }, []);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     try {
       const response = await expenseService.getExpenses(1, 100);
       setExpenses(response.data.data);
     } catch (err) {
       console.error('Error fetching expenses:', err);
     }
-  };
+  }, []);
 
   const handleAddClick = () => {
     setSelectedRecipe(null);
