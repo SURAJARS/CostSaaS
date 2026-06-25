@@ -43,10 +43,6 @@ const MenusPage = () => {
     status: 'active'
   });
 
-  useEffect(() => {
-    fetchMenus();
-  }, [fetchMenus]);
-
   const fetchMenus = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -60,6 +56,10 @@ const MenusPage = () => {
       setLoading(false);
     }
   }, [page, limit]);
+
+  useEffect(() => {
+    fetchMenus();
+  }, [fetchMenus]);
 
   const handleSearch = async (e) => {
     e.preventDefault();

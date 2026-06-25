@@ -32,10 +32,6 @@ const IngredientsPage = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  useEffect(() => {
-    fetchIngredients();
-  }, [fetchIngredients]);
-
   const fetchIngredients = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -49,6 +45,10 @@ const IngredientsPage = () => {
       setLoading(false);
     }
   }, [page, limit]);
+
+  useEffect(() => {
+    fetchIngredients();
+  }, [fetchIngredients]);
 
   const handleSearch = async (e) => {
     e.preventDefault();

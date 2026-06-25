@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Box,
@@ -40,11 +40,7 @@ const ExpensesPage = () => {
     description: ''
   });
 
-  useEffect(() => {
-    fetchExpenses();
-  }, [page, limit]);
-
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     setLoading(true);
     try {
       const response = await expenseService.getExpenses(page, limit);
@@ -55,7 +51,11 @@ const ExpensesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit]);
+
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
 
   const handleAddClick = () => {
     setSelectedExpense(null);

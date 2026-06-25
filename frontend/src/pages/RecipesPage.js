@@ -49,13 +49,6 @@ const RecipesPage = () => {
     expenses: []
   });
 
-  useEffect(() => {
-    fetchRecipes();
-    fetchMenus();
-    fetchIngredients();
-    fetchExpenses();
-  }, [fetchRecipes, fetchMenus, fetchIngredients, fetchExpenses]);
-
   const fetchRecipes = useCallback(async () => {
     setLoading(true);
     try {
@@ -95,6 +88,13 @@ const RecipesPage = () => {
       console.error('Error fetching expenses:', err);
     }
   }, []);
+
+  useEffect(() => {
+    fetchRecipes();
+    fetchMenus();
+    fetchIngredients();
+    fetchExpenses();
+  }, [fetchRecipes, fetchMenus, fetchIngredients, fetchExpenses]);
 
   const handleAddClick = () => {
     setSelectedRecipe(null);

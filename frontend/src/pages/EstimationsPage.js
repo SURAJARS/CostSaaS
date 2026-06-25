@@ -74,11 +74,6 @@ const EstimationsPage = () => {
     profitMargin: 0
   });
 
-  useEffect(() => {
-    fetchEstimations();
-    fetchMenus();
-  }, [fetchEstimations, fetchMenus]);
-
   const fetchEstimations = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -101,6 +96,11 @@ const EstimationsPage = () => {
       console.error('Error fetching menus:', err);
     }
   }, []);
+
+  useEffect(() => {
+    fetchEstimations();
+    fetchMenus();
+  }, [fetchEstimations, fetchMenus]);
 
   const handleAddClick = () => {
     setSelectedEstimation(null);
