@@ -19,7 +19,6 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
 import LocalOffer from '@mui/icons-material/LocalOffer';
 
 const Sidebar = ({ open, onClose }) => {

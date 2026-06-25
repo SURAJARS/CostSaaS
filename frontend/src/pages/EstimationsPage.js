@@ -11,9 +11,6 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  FormControl,
-  InputLabel,
-  Select,
   Typography,
   Paper,
   Checkbox,
@@ -129,11 +126,6 @@ const EstimationsPage = () => {
       transportCost: estimation.transportCost || 0,
       miscellaneousCost: estimation.miscellaneousCost || 0,
       profitMargin: estimation.profitMargin || 0
-    });
-    const ingredientMap = {};
-    const amountMap = {};
-    estimation.ingredients?.forEach(ing => {
-      ingredientMap[ing._id] = ing.requiredQty;
     });
     setEditedIngredients(ingredientMap);
     setViewDialogOpen(true);
@@ -298,9 +290,8 @@ const EstimationsPage = () => {
       const originalGuestCount = selectedEstimation.guestCount;
       const scaleFactor = newGuestCount / originalGuestCount;
       
-      // Scale all existing ingredient quantities and update amounts
+      // Scale all existing ingredient quantities
       const scaledIngredients = {};
-      const scaledAmounts = {};
       selectedEstimation.ingredients?.forEach(ing => {
         // Get the original quantity (from stored edit value or current value)
         const originalQty = editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty;
