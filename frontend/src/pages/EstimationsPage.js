@@ -127,6 +127,10 @@ const EstimationsPage = () => {
       miscellaneousCost: estimation.miscellaneousCost || 0,
       profitMargin: estimation.profitMargin || 0
     });
+    const ingredientMap = {};
+    estimation.ingredients?.forEach(ing => {
+      ingredientMap[ing._id] = ing.requiredQty;
+    });
     setEditedIngredients(ingredientMap);
     setViewDialogOpen(true);
     
