@@ -23,6 +23,7 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://kasikannu.vercel.app',
   process.env.CORS_ORIGIN
 ].filter(Boolean);
 
