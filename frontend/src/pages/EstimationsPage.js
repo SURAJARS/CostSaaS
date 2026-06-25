@@ -24,9 +24,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Grid,
-  Card,
-  CardContent
+  Grid
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import ViewIcon from '@mui/icons-material/Visibility';
@@ -60,7 +58,6 @@ const EstimationsPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [editedIngredients, setEditedIngredients] = useState({});
-  const [editedAmounts, setEditedAmounts] = useState({});
   const [formData, setFormData] = useState({
     chefName: '',
     eventDate: '',
@@ -137,10 +134,8 @@ const EstimationsPage = () => {
     const amountMap = {};
     estimation.ingredients?.forEach(ing => {
       ingredientMap[ing._id] = ing.requiredQty;
-      amountMap[ing._id] = ing.amount;
     });
     setEditedIngredients(ingredientMap);
-    setEditedAmounts(amountMap);
     setViewDialogOpen(true);
     
     // Fetch dishwise ingredient and expense details
@@ -207,50 +202,6 @@ const EstimationsPage = () => {
       setDishwiseExpenses(dishExpenses);
     } catch (err) {
       console.error('Error fetching dishwise ingredients and expenses:', err);
-    } finally {
-      setLoadingRecipes(false);
-    }
-  };
-
-  const fetchDishwiseIngredients = async (estimation) => {
-    if (!estimation.selectedMenus || estimation.selectedMenus.length === 0) {
-      setDishwiseIngredients({});
-      return;
-    }
-
-    setLoadingRecipes(true);
-    const dishIngredients = {};
-
-    try {
-      for (const menu of estimation.selectedMenus) {
-        const menuId = menu.menuId?._id || menu.menuId;
-        try {
-          const response = await recipeService.getRecipeByMenuId(menuId);
-          const recipe = response.data.data;
-          
-          if (recipe && recipe.ingredients) {
-            // Scale ingredients based on guest count
-            const scaleFactor = estimation.guestCount / recipe.baseMembers;
-            const scaledIngredients = recipe.ingredients.map(ing => ({
-              ...ing,
-              scaledQuantity: (ing.quantity * scaleFactor).toFixed(2)
-            }));
-            
-            dishIngredients[menuId] = {
-              menuName_en: menu.menuName_en || recipe.menuName_en,
-              menuName_ta: menu.menuName_ta || recipe.menuName_ta,
-              baseMembers: recipe.baseMembers,
-              ingredients: scaledIngredients
-            };
-          }
-        } catch (err) {
-          console.error(`Error fetching recipe for menu ${menuId}:`, err);
-        }
-      }
-      
-      setDishwiseIngredients(dishIngredients);
-    } catch (err) {
-      console.error('Error fetching dishwise ingredients:', err);
     } finally {
       setLoadingRecipes(false);
     }
@@ -355,25 +306,14 @@ const EstimationsPage = () => {
         const originalQty = editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty;
         const newQty = parseFloat((originalQty * scaleFactor).toFixed(2));
         scaledIngredients[ing._id] = newQty;
-        
-        // Recalculate amount based on new quantity
-        scaledAmounts[ing._id] = newQty * ing.currentRate;
       });
       
       setEditedIngredients(scaledIngredients);
-      setEditedAmounts(scaledAmounts);
     }
     
     setEditFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleIngredientQtyChange = (ingredientId, newValue) => {
-    setEditedIngredients(prev => ({
-      ...prev,
-      [ingredientId]: parseFloat(newValue) || 0
     }));
   };
 
@@ -622,7 +562,6 @@ const EstimationsPage = () => {
         setViewDialogOpen(false);
         setEditMode(false);
         setEditedIngredients({});
-        setEditedAmounts({});
       }} maxWidth="sm" fullWidth>
         <DialogTitle>
           {editMode ? `${t('estimations.editEstimation')} - ${selectedEstimation?.chefName}` : t('estimations.viewEstimation')}

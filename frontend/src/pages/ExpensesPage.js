@@ -4,26 +4,19 @@ import {
   Box,
   Button,
   TextField,
-  CircularProgress,
   Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+  IconButton
 } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import expenseService from '../services/expenseService';
 import DataTable from '../components/DataTable';
 
 const ExpensesPage = () => {
-  const { t } = useTranslation();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
