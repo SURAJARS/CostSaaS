@@ -129,9 +129,9 @@
   "estimations": {
     "title": "Estimations",
     "createEstimation": "Create Estimation",
-    "customerName": "Customer Name",
-    "mobileNumber": "Mobile Number",
+    "chefName": "Chef Name",
     "eventDate": "Event Date",
+    "eventVenue": "Event Venue",
     "guestCount": "Guest Count",
     "menus": "Selected Menus",
     "addEstimation": "Create Estimation",

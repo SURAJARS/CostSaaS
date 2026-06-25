@@ -20,6 +20,7 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
+import LocalOffer from '@mui/icons-material/LocalOffer';
 
 const Sidebar = ({ open, onClose }) => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const Sidebar = ({ open, onClose }) => {
   const menuItems = [
     { label: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/dashboard' },
     { label: t('navigation.ingredients'), icon: <ShoppingCartIcon />, path: '/ingredients' },
+    { label: 'Expenses', icon: <LocalOffer />, path: '/expenses' },
     { label: t('navigation.menus'), icon: <RestaurantIcon />, path: '/menus' },
     { label: t('navigation.recipes'), icon: <MenuBookIcon />, path: '/recipes' },
     { label: t('navigation.estimations'), icon: <CalculateIcon />, path: '/estimations' },

@@ -47,11 +47,17 @@ const validateRecipe = (data) => {
     baseMembers: Joi.number().min(1).required(),
     ingredients: Joi.array().items(
       Joi.object({
-        ingredientId: Joi.string().allow(''),
+        ingredientId: Joi.alternatives().try(Joi.string(), Joi.object()).allow(''),
         quantity: Joi.number(),
         unit: Joi.string()
       }).unknown(true)
     ),
+    expenses: Joi.array().items(
+      Joi.object({
+        expenseId: Joi.alternatives().try(Joi.string(), Joi.object()).required(),
+        amount: Joi.number().min(0).required()
+      })
+    ).default([]),
     status: Joi.string().valid('active', 'inactive')
   }).unknown(true);
 
@@ -60,9 +66,9 @@ const validateRecipe = (data) => {
 
 const validateEstimation = (data) => {
   const schema = Joi.object({
-    customerName: Joi.string().required(),
-    mobileNumber: Joi.string().pattern(/^[0-9]{10}$/).required(),
+    chefName: Joi.string().required(),
     eventDate: Joi.date().required(),
+    eventVenue: Joi.string().required(),
     guestCount: Joi.number().min(1).required(),
     selectedMenus: Joi.array().items(
       Joi.object({
@@ -74,8 +80,23 @@ const validateEstimation = (data) => {
     gasCost: Joi.number().min(0).default(0),
     transportCost: Joi.number().min(0).default(0),
     miscellaneousCost: Joi.number().min(0).default(0),
-    profitMargin: Joi.number().min(0).default(0)
+    profitMargin: Joi.number().min(0).default(0),
+    expenses: Joi.array().items(
+      Joi.object({
+        description: Joi.string().required(),
+        amount: Joi.number().min(0).required()
+      })
+    ).default([])
   }).unknown(true);
+
+  return schema.validate(data);
+};
+
+const validateExpense = (data) => {
+  const schema = Joi.object({
+    name_en: Joi.string().required(),
+    description: Joi.string().allow('', null).optional()
+  });
 
   return schema.validate(data);
 };
@@ -85,5 +106,6 @@ module.exports = {
   validateIngredient,
   validateMenu,
   validateRecipe,
-  validateEstimation
+  validateEstimation,
+  validateExpense
 };

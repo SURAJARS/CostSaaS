@@ -145,39 +145,18 @@ const Dashboard = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: headerBgColor, color: headerTextColor }}>
-                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>{t('dashboard.customerName')}</th>
+                  <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>Chef Name</th>
                   <th style={{ textAlign: 'left', padding: '12px', color: headerTextColor }}>{t('dashboard.eventDate')}</th>
                   <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>{t('dashboard.guestCount')}</th>
-                  <th style={{ textAlign: 'center', padding: '12px', color: headerTextColor }}>{t('dashboard.status')}</th>
                   <th style={{ textAlign: 'right', padding: '12px', color: headerTextColor }}>{t('dashboard.grandTotal')}</th>
                 </tr>
               </thead>
               <tbody>
                 {recentEstimations.map((est) => (
                   <tr key={est._id} style={{ borderBottom: `1px solid ${borderColor}` }}>
-                    <td style={{ padding: '12px' }}>{est.customerName}</td>
+                    <td style={{ padding: '12px' }}>{est.chefName}</td>
                     <td style={{ padding: '12px' }}>{new Date(est.eventDate).toLocaleDateString('en-IN')}</td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>{est.guestCount}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        backgroundColor: 
-                          est.status === 'Draft' ? '#fff3cd' :
-                          est.status === 'Sent' ? '#d1ecf1' :
-                          est.status === 'Approved' ? '#d4edda' :
-                          '#d6d8db',
-                        color:
-                          est.status === 'Draft' ? '#856404' :
-                          est.status === 'Sent' ? '#0c5460' :
-                          est.status === 'Approved' ? '#155724' :
-                          '#383d41'
-                      }}>
-                        {est.status}
-                      </span>
-                    </td>
                     <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>
                       Rs. {est.grandTotal?.toFixed(2) || '0.00'}
                     </td>
@@ -239,73 +218,6 @@ const Dashboard = () => {
                   </Typography>
                   <Typography variant="h5" sx={{ color: 'info.main' }}>
                     {analytics.statistics.avgProfitMargin}%
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    {t('dashboard.draftEstimations')}
-                  </Typography>
-                  <Typography variant="h5" sx={{ color: 'warning.main' }}>
-                    {analytics.statusDistribution?.Draft || 0}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          {/* Status Distribution */}
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {t('dashboard.estimationStatusDistribution')}
-          </Typography>
-          <Grid container spacing={2} sx={{ mb: 4 }}>
-            <Grid item xs={6} sm={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="body2" color="textSecondary">
-                    Draft
-                  </Typography>
-                  <Typography variant="h6">
-                    {analytics.statusDistribution?.Draft || 0}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="body2" color="textSecondary">
-                    Sent
-                  </Typography>
-                  <Typography variant="h6">
-                    {analytics.statusDistribution?.Sent || 0}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="body2" color="textSecondary">
-                    Approved
-                  </Typography>
-                  <Typography variant="h6">
-                    {analytics.statusDistribution?.Approved || 0}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="body2" color="textSecondary">
-                    Completed
-                  </Typography>
-                  <Typography variant="h6">
-                    {analytics.statusDistribution?.Completed || 0}
                   </Typography>
                 </CardContent>
               </Card>

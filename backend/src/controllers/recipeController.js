@@ -17,12 +17,18 @@ class RecipeController {
         return res.status(404).json({ success: false, message: 'Menu not found' });
       }
 
+      // Helper function to extract ID from string or object
+      const extractId = (item) => {
+        return typeof item === 'string' ? item : item?._id || item?.id;
+      };
+
       // Enrich ingredients with names
       const enrichedIngredients = await Promise.all(
         (value.ingredients || []).map(async (ing) => {
-          const ingredient = await Ingredient.findById(ing.ingredientId);
+          const ingredientId = extractId(ing.ingredientId);
+          const ingredient = await Ingredient.findById(ingredientId);
           return {
-            ingredientId: ing.ingredientId,
+            ingredientId: ingredientId,
             ingredientName_en: ingredient?.name_en || 'Unknown',
             ingredientName_ta: ingredient?.name_ta || 'Unknown',
             quantity: ing.quantity,
@@ -31,6 +37,12 @@ class RecipeController {
         })
       );
 
+      // Process expenses - extract IDs if they're objects
+      const processedExpenses = (value.expenses || []).map(exp => ({
+        expenseId: extractId(exp.expenseId),
+        amount: exp.amount
+      }));
+
       // Create enriched recipe data
       const recipeData = {
         menuId: value.menuId,
@@ -38,6 +50,7 @@ class RecipeController {
         menuName_ta: menu.name_ta,
         baseMembers: value.baseMembers,
         ingredients: enrichedIngredients,
+        expenses: processedExpenses,
         status: value.status || 'active'
       };
 
@@ -106,12 +119,18 @@ class RecipeController {
         return res.status(404).json({ success: false, message: 'Menu not found' });
       }
 
+      // Helper function to extract ID from string or object
+      const extractId = (item) => {
+        return typeof item === 'string' ? item : item?._id || item?.id;
+      };
+
       // Enrich ingredients with names
       const enrichedIngredients = await Promise.all(
         (value.ingredients || []).map(async (ing) => {
-          const ingredient = await Ingredient.findById(ing.ingredientId);
+          const ingredientId = extractId(ing.ingredientId);
+          const ingredient = await Ingredient.findById(ingredientId);
           return {
-            ingredientId: ing.ingredientId,
+            ingredientId: ingredientId,
             ingredientName_en: ingredient?.name_en || 'Unknown',
             ingredientName_ta: ingredient?.name_ta || 'Unknown',
             quantity: ing.quantity,
@@ -120,6 +139,12 @@ class RecipeController {
         })
       );
 
+      // Process expenses - extract IDs if they're objects
+      const processedExpenses = (value.expenses || []).map(exp => ({
+        expenseId: extractId(exp.expenseId),
+        amount: exp.amount
+      }));
+
       // Create enriched recipe data
       const recipeData = {
         menuId: value.menuId,
@@ -127,6 +152,7 @@ class RecipeController {
         menuName_ta: menu.name_ta,
         baseMembers: value.baseMembers,
         ingredients: enrichedIngredients,
+        expenses: processedExpenses,
         status: value.status || 'active'
       };
 

@@ -40,6 +40,21 @@ const RecipeSchema = new mongoose.Schema({
       _id: false
     }
   ],
+  expenses: [
+    {
+      expenseId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Expense',
+        required: true
+      },
+      amount: {
+        type: Number,
+        required: true,
+        min: 0
+      },
+      _id: false
+    }
+  ],
   status: {
     type: String,
     enum: ['active', 'inactive'],

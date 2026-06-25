@@ -37,7 +37,7 @@ import estimationService from '../services/estimationService';
 import menuService from '../services/menuService';
 import recipeService from '../services/recipeService';
 import DataTable from '../components/DataTable';
-import { formatCurrency, downloadFile } from '../utils/helpers';
+import { formatCurrency, downloadFile, formatQuantity } from '../utils/helpers';
 
 const EstimationsPage = () => {
   const { t } = useTranslation();
@@ -50,44 +50,41 @@ const EstimationsPage = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
-  const [statusFilter, setStatusFilter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedEstimation, setSelectedEstimation] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState('');
   const [dishwiseIngredients, setDishwiseIngredients] = useState({});
+  const [dishwiseExpenses, setDishwiseExpenses] = useState({});
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [editedIngredients, setEditedIngredients] = useState({});
   const [editedAmounts, setEditedAmounts] = useState({});
-  const [editedAmounts, setEditedAmounts] = useState({});
   const [formData, setFormData] = useState({
-    customerName: '',
-    mobileNumber: '',
+    chefName: '',
     eventDate: '',
+    eventVenue: '',
     guestCount: 1,
     selectedMenus: [],
     labourCost: 0,
     gasCost: 0,
     transportCost: 0,
     miscellaneousCost: 0,
-    profitMargin: 0,
-    status: 'Draft'
+    profitMargin: 0
   });
 
   useEffect(() => {
     fetchEstimations();
     fetchMenus();
-  }, [page, limit, statusFilter]);
+  }, [page, limit]);
 
   const fetchEstimations = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await estimationService.getEstimations(page, limit, statusFilter);
+      const response = await estimationService.getEstimations(page, limit);
       setEstimations(response.data.data);
       setTotal(response.data.pagination.total);
     } catch (err) {
@@ -109,9 +106,9 @@ const EstimationsPage = () => {
   const handleAddClick = () => {
     setSelectedEstimation(null);
     setFormData({
-      customerName: '',
-      mobileNumber: '',
+      chefName: '',
       eventDate: '',
+      eventVenue: '',
       guestCount: 1,
       selectedMenus: [],
       labourCost: 0,
@@ -123,18 +120,13 @@ const EstimationsPage = () => {
     setDialogOpen(true);
   };
 
-  const isEstimationEditable = (status) => {
-    return status !== 'Approved' && status !== 'Completed';
-  };
-
   const handleViewClick = async (estimation) => {
     setSelectedEstimation(estimation);
-    setSelectedStatus(estimation.status || 'Draft');
     setEditMode(false);
     setEditFormData({
-      customerName: estimation.customerName,
-      mobileNumber: estimation.mobileNumber,
+      chefName: estimation.chefName,
       eventDate: estimation.eventDate?.split('T')[0],
+      eventVenue: estimation.eventVenue,
       guestCount: estimation.guestCount,
       labourCost: estimation.labourCost || 0,
       gasCost: estimation.gasCost || 0,
@@ -152,8 +144,73 @@ const EstimationsPage = () => {
     setEditedAmounts(amountMap);
     setViewDialogOpen(true);
     
-    // Fetch dishwise ingredient details
-    await fetchDishwiseIngredients(estimation);
+    // Fetch dishwise ingredient and expense details
+    await fetchDishwiseIngredientsAndExpenses(estimation);
+  };
+
+  const fetchDishwiseIngredientsAndExpenses = async (estimation) => {
+    if (!estimation.selectedMenus || estimation.selectedMenus.length === 0) {
+      setDishwiseIngredients({});
+      setDishwiseExpenses({});
+      return;
+    }
+
+    setLoadingRecipes(true);
+    const dishIngredients = {};
+    const dishExpenses = {};
+
+    try {
+      for (const menu of estimation.selectedMenus) {
+        const menuId = menu.menuId?._id || menu.menuId;
+        try {
+          const response = await recipeService.getRecipeByMenuId(menuId);
+          const recipe = response.data.data;
+          
+          if (recipe) {
+            const scaleFactor = estimation.guestCount / recipe.baseMembers;
+            
+            // Scale ingredients
+            if (recipe.ingredients && recipe.ingredients.length > 0) {
+              const scaledIngredients = recipe.ingredients.map(ing => ({
+                ...ing,
+                scaledQuantity: (ing.quantity * scaleFactor).toFixed(2)
+              }));
+              
+              dishIngredients[menuId] = {
+                menuName_en: menu.menuName_en || recipe.menuName_en,
+                menuName_ta: menu.menuName_ta || recipe.menuName_ta,
+                baseMembers: recipe.baseMembers,
+                ingredients: scaledIngredients
+              };
+            }
+            
+            // Scale expenses
+            if (recipe.expenses && recipe.expenses.length > 0) {
+              const scaledExpenses = recipe.expenses.map(expense => ({
+                ...expense,
+                scaledAmount: (expense.amount * scaleFactor).toFixed(2)
+              }));
+              
+              dishExpenses[menuId] = {
+                menuName_en: menu.menuName_en || recipe.menuName_en,
+                menuName_ta: menu.menuName_ta || recipe.menuName_ta,
+                baseMembers: recipe.baseMembers,
+                expenses: scaledExpenses
+              };
+            }
+          }
+        } catch (err) {
+          console.error(`Error fetching recipe for menu ${menuId}:`, err);
+        }
+      }
+      
+      setDishwiseIngredients(dishIngredients);
+      setDishwiseExpenses(dishExpenses);
+    } catch (err) {
+      console.error('Error fetching dishwise ingredients and expenses:', err);
+    } finally {
+      setLoadingRecipes(false);
+    }
   };
 
   const fetchDishwiseIngredients = async (estimation) => {
@@ -231,16 +288,16 @@ const EstimationsPage = () => {
   };
 
   const handleSave = async () => {
-    if (!formData.customerName || !formData.mobileNumber || !formData.eventDate || formData.selectedMenus.length === 0) {
+    if (!formData.chefName || !formData.eventDate || !formData.eventVenue || formData.selectedMenus.length === 0) {
       setError('Please fill all required fields');
       return;
     }
 
     try {
       const payload = {
-        customerName: formData.customerName,
-        mobileNumber: formData.mobileNumber,
+        chefName: formData.chefName,
         eventDate: formData.eventDate,
+        eventVenue: formData.eventVenue,
         guestCount: parseInt(formData.guestCount),
         selectedMenus: formData.selectedMenus,
         labourCost: parseFloat(formData.labourCost) || 0,
@@ -274,28 +331,13 @@ const EstimationsPage = () => {
     }
   };
 
-  const handleStatusUpdate = async () => {
-    if (!selectedEstimation) return;
-    try {
-      setLoading(true);
-      await estimationService.updateEstimation(selectedEstimation._id, { status: selectedStatus });
-      setError('');
-      setSuccess('Status updated successfully');
-      setViewDialogOpen(false);
-      fetchEstimations();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error updating status');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleEditClick = () => {
-    if (isEstimationEditable(selectedEstimation?.status)) {
-      setEditMode(true);
-    }
+    setEditMode(true);
   };
+
+
 
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
@@ -337,29 +379,24 @@ const EstimationsPage = () => {
   };
 
   const handleEditSave = async () => {
-    if (!editFormData.customerName || !editFormData.mobileNumber || !editFormData.eventDate) {
+    if (!editFormData.chefName || !editFormData.eventDate || !editFormData.eventVenue) {
       setError('Please fill all required fields');
       return;
     }
 
     try {
       setLoading(true);
-      const updatedIngredients = selectedEstimation.ingredients.map(ing => ({
-        ...ing,
-        requiredQty: editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty
-      }));
-
+      // Keep original ingredients unchanged
       const payload = {
-        customerName: editFormData.customerName,
-        mobileNumber: editFormData.mobileNumber,
+        chefName: editFormData.chefName,
         eventDate: editFormData.eventDate,
+        eventVenue: editFormData.eventVenue,
         guestCount: parseInt(editFormData.guestCount),
         labourCost: parseFloat(editFormData.labourCost) || 0,
         gasCost: parseFloat(editFormData.gasCost) || 0,
         transportCost: parseFloat(editFormData.transportCost) || 0,
         miscellaneousCost: parseFloat(editFormData.miscellaneousCost) || 0,
-        profitMargin: parseFloat(editFormData.profitMargin) || 0,
-        ingredients: updatedIngredients
+        profitMargin: parseFloat(editFormData.profitMargin) || 0
       };
       await estimationService.updateEstimation(selectedEstimation._id, payload);
       setError('');
@@ -405,15 +442,13 @@ const EstimationsPage = () => {
   };
 
   const columns = [
-    { id: 'customerName', label: t('estimations.customerName') },
-    { id: 'mobileNumber', label: t('estimations.mobileNumber') },
+    { id: 'chefName', label: 'Chef Name' },
     {
       id: 'eventDate',
       label: t('estimations.eventDate'),
       render: (row) => new Date(row.eventDate).toLocaleDateString('en-IN')
     },
     { id: 'guestCount', label: t('estimations.guestCount') },
-    { id: 'status', label: 'Status' },
     {
       id: 'grandTotal',
       label: t('estimations.grandTotal'),
@@ -464,26 +499,6 @@ const EstimationsPage = () => {
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3, minWidth: 200 }}>
-        <FormControl fullWidth>
-          <InputLabel>Filter by Status</InputLabel>
-          <Select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-            label="Filter by Status"
-          >
-            <MenuItem value="">{t('common.all')} {t('estimations.status')}</MenuItem>
-            <MenuItem value="Draft">{t('estimations.draft')}</MenuItem>
-            <MenuItem value="Sent">{t('estimations.sentToCustomer')}</MenuItem>
-            <MenuItem value="Approved">{t('estimations.approved')}</MenuItem>
-            <MenuItem value="Completed">{t('estimations.completed')}</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-
       <DataTable
         columns={columns}
         rows={estimations}
@@ -498,17 +513,9 @@ const EstimationsPage = () => {
         <DialogTitle>{t('estimations.addEstimation')}</DialogTitle>
         <DialogContent sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            label={t('estimations.customerName')}
-            name="customerName"
-            value={formData.customerName}
-            onChange={handleFormChange}
-            fullWidth
-            required
-          />
-          <TextField
-            label={t('estimations.mobileNumber')}
-            name="mobileNumber"
-            value={formData.mobileNumber}
+            label="Chef Name"
+            name="chefName"
+            value={formData.chefName}
             onChange={handleFormChange}
             fullWidth
             required
@@ -522,6 +529,14 @@ const EstimationsPage = () => {
             fullWidth
             required
             InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Event Venue"
+            name="eventVenue"
+            value={formData.eventVenue}
+            onChange={handleFormChange}
+            fullWidth
+            required
           />
           <TextField
             label={t('estimations.guestCount')}
@@ -593,20 +608,7 @@ const EstimationsPage = () => {
             fullWidth
             inputProps={{ step: '0.01', min: '0' }}
           />
-          <FormControl fullWidth>
-            <InputLabel>Status</InputLabel>
-            <Select
-              name="status"
-              value={formData.status}
-              onChange={handleFormChange}
-              label="Status"
-            >
-              <MenuItem value="Draft">{t('estimations.draft')}</MenuItem>
-              <MenuItem value="Sent">{t('estimations.sentToCustomer')}</MenuItem>
-              <MenuItem value="Approved">{t('estimations.approved')}</MenuItem>
-              <MenuItem value="Completed">{t('estimations.completed')}</MenuItem>
-            </Select>
-          </FormControl>
+
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>{t('common.cancel')}</Button>
@@ -624,30 +626,17 @@ const EstimationsPage = () => {
         setEditedAmounts({});
       }} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editMode ? `${t('estimations.editEstimation')} - ${selectedEstimation?.customerName}` : t('estimations.viewEstimation')}
+          {editMode ? `${t('estimations.editEstimation')} - ${selectedEstimation?.chefName}` : t('estimations.viewEstimation')}
         </DialogTitle>
-        {!isEstimationEditable(selectedEstimation?.status) && !editMode && (
-          <Alert severity="info" sx={{ mx: 2, mt: 2 }}>
-            This estimation is locked as its status is "{selectedEstimation?.status}". Status changes cannot be made.
-          </Alert>
-        )}
         <DialogContent sx={{ pt: 2 }}>
           {selectedEstimation && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {editMode ? (
                 <>
                   <TextField
-                    label={t('estimations.customerName')}
-                    name="customerName"
-                    value={editFormData.customerName}
-                    onChange={handleEditFormChange}
-                    fullWidth
-                    required
-                  />
-                  <TextField
-                    label={t('estimations.mobileNumber')}
-                    name="mobileNumber"
-                    value={editFormData.mobileNumber}
+                    label="Chef Name"
+                    name="chefName"
+                    value={editFormData.chefName}
                     onChange={handleEditFormChange}
                     fullWidth
                     required
@@ -661,6 +650,14 @@ const EstimationsPage = () => {
                     fullWidth
                     required
                     InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    label="Event Venue"
+                    name="eventVenue"
+                    value={editFormData.eventVenue}
+                    onChange={handleEditFormChange}
+                    fullWidth
+                    required
                   />
                   <TextField
                     label={t('estimations.guestCount')}
@@ -717,20 +714,21 @@ const EstimationsPage = () => {
                     fullWidth
                     inputProps={{ step: '0.01', min: '0' }}
                   />
+
                 </>
               ) : (
                 <>
                   <Box>
-                    <Typography variant="subtitle2">{t('estimations.customerName')}</Typography>
-                    <Typography>{selectedEstimation.customerName}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2">{t('estimations.mobileNumber')}</Typography>
-                    <Typography>{selectedEstimation.mobileNumber}</Typography>
+                    <Typography variant="subtitle2">Chef Name</Typography>
+                    <Typography>{selectedEstimation.chefName}</Typography>
                   </Box>
                   <Box>
                     <Typography variant="subtitle2">{t('estimations.eventDate')}</Typography>
                     <Typography>{new Date(selectedEstimation.eventDate).toLocaleDateString('en-IN')}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2">Event Venue</Typography>
+                    <Typography>{selectedEstimation.eventVenue}</Typography>
                   </Box>
                   <Box>
                     <Typography variant="subtitle2">{t('estimations.guestCount')}</Typography>
@@ -738,23 +736,6 @@ const EstimationsPage = () => {
                   </Box>
                 </>
               )}
-
-              <Box>
-                <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    label="Status"
-                    disabled={!isEstimationEditable(selectedEstimation?.status) || editMode}
-                  >
-                    <MenuItem value="Draft">{t('estimations.draft')}</MenuItem>
-                    <MenuItem value="Sent">{t('estimations.sentToCustomer')}</MenuItem>
-                    <MenuItem value="Approved">{t('estimations.approved')}</MenuItem>
-                    <MenuItem value="Completed">{t('estimations.completed')}</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
 
               <Box>
                 <Typography variant="subtitle2">{t('estimations.ingredient')}</Typography>
@@ -771,21 +752,9 @@ const EstimationsPage = () => {
                       <TableRow key={index}>
                         <TableCell>{ing.ingredientName_en}</TableCell>
                         <TableCell align="right">
-                          {editMode && isEstimationEditable(selectedEstimation?.status) ? (
-                            <TextField
-                              type="number"
-                              size="small"
-                              value={editedIngredients[ing._id] !== undefined ? editedIngredients[ing._id] : ing.requiredQty}
-                              onChange={(e) => handleIngredientQtyChange(ing._id, e.target.value)}
-                              disabled={true}
-                              inputProps={{ step: '0.01', min: '0', style: { textAlign: 'right' } }}
-                              sx={{ width: '100px' }}
-                            />
-                          ) : (
-                            `${ing.requiredQty.toFixed(2)} ${ing.unit}`
-                          )}
+                          {formatQuantity(ing.requiredQty, ing.unit)}
                         </TableCell>
-                        <TableCell align="right">{formatCurrency(editedAmounts[ing._id] !== undefined ? editedAmounts[ing._id] : ing.amount)}</TableCell>
+                        <TableCell align="right">{formatCurrency(ing.amount)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -821,7 +790,7 @@ const EstimationsPage = () => {
                                 {ing.ingredientName_en} ({ing.ingredientName_ta})
                               </TableCell>
                               <TableCell align="right">
-                                {ing.scaledQuantity} {ing.unit}
+                                {formatQuantity(ing.scaledQuantity, ing.unit)}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -832,6 +801,50 @@ const EstimationsPage = () => {
                 ) : (
                   <Typography variant="caption" color="textSecondary">
                     No recipe details available for selected dishes
+                  </Typography>
+                )}
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>Expenses by Dish</Typography>
+                {loadingRecipes ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                    <CircularProgress size={30} />
+                  </Box>
+                ) : Object.keys(dishwiseExpenses).length > 0 ? (
+                  Object.entries(dishwiseExpenses).map(([menuId, dishData]) => (
+                    <Paper key={menuId} sx={{ p: 2, mb: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        {dishData.menuName_en} ({dishData.menuName_ta})
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 1 }}>
+                        For {selectedEstimation.guestCount} members (base: {dishData.baseMembers} members)
+                      </Typography>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Expense</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Scaled Amount</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {dishData.expenses.map((expense, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>
+                                {expense.name_en} ({expense.name_ta})
+                              </TableCell>
+                              <TableCell align="right">
+                                {formatCurrency(expense.scaledAmount)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </Paper>
+                  ))
+                ) : (
+                  <Typography variant="caption" color="textSecondary">
+                    No expenses associated with selected dishes
                   </Typography>
                 )}
               </Box>
@@ -889,24 +902,12 @@ const EstimationsPage = () => {
           ) : (
             <>
               <Button onClick={() => setViewDialogOpen(false)}>{t('common.close')}</Button>
-              {isEstimationEditable(selectedEstimation?.status) && (
-                <Button 
-                  onClick={handleEditClick} 
-                  variant="outlined"
-                >
-                  Edit
-                </Button>
-              )}
-              {selectedStatus !== selectedEstimation?.status && isEstimationEditable(selectedEstimation?.status) && (
-                <Button 
-                  onClick={handleStatusUpdate} 
-                  variant="contained" 
-                  color="primary"
-                  disabled={loading}
-                >
-                  Update Status
-                </Button>
-              )}
+              <Button 
+                onClick={handleEditClick} 
+                variant="outlined"
+              >
+                Edit
+              </Button>
             </>
           )}
         </DialogActions>

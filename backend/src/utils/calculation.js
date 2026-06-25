@@ -81,6 +81,40 @@ const calculateRawMaterialCost = (ingredients) => {
   return ingredients.reduce((total, ing) => total + ing.amount, 0);
 };
 
+// Consolidate expenses from multiple menus and scale by guest count
+const consolidateExpenses = (menuExpenses, guestCount) => {
+  const consolidated = {};
+
+  menuExpenses.forEach(menu => {
+    const { expenses, baseMembers } = menu;
+    
+    expenses.forEach(expense => {
+      const expenseId = expense.expenseId?._id?.toString() || expense.expenseId?.toString();
+      const scaleFactor = guestCount / baseMembers;
+      const scaledAmount = expense.amount * scaleFactor;
+
+      if (consolidated[expenseId]) {
+        consolidated[expenseId].scaledAmount += scaledAmount;
+      } else {
+        consolidated[expenseId] = {
+          _id: expenseId,
+          name_en: expense.expenseId?.name_en,
+          name_ta: expense.expenseId?.name_ta,
+          baseAmount: expense.amount,
+          scaledAmount: scaledAmount
+        };
+      }
+    });
+  });
+
+  return Object.values(consolidated);
+};
+
+// Calculate total expenses cost
+const calculateExpenseCost = (expenses) => {
+  return expenses.reduce((total, expense) => total + expense.scaledAmount, 0);
+};
+
 // Calculate additional costs total
 const calculateAdditionalCostTotal = (additionalCost) => {
   return Object.values(additionalCost).reduce((total, cost) => total + cost, 0);
@@ -104,6 +138,8 @@ module.exports = {
   consolidateIngredients,
   calculateIngredientCost,
   calculateRawMaterialCost,
+  consolidateExpenses,
+  calculateExpenseCost,
   calculateAdditionalCostTotal,
   calculateGrandTotal
 };

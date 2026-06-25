@@ -19,6 +19,7 @@ import IngredientsPage from './pages/IngredientsPage';
 import MenusPage from './pages/MenusPage';
 import RecipesPage from './pages/RecipesPage';
 import EstimationsPage from './pages/EstimationsPage';
+import ExpensesPage from './pages/ExpensesPage';
 import ReportsPage from './pages/ReportsPage';
 
 // Placeholder pages
@@ -71,6 +72,7 @@ const AppContent = () => {
                     <Routes>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/ingredients" element={<IngredientsPage />} />
+                      <Route path="/expenses" element={<ExpensesPage />} />
                       <Route path="/menus" element={<MenusPage />} />
                       <Route path="/recipes" element={<RecipesPage />} />
                       <Route path="/estimations" element={<EstimationsPage />} />

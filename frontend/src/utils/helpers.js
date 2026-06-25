@@ -21,6 +21,25 @@ export const formatNumber = (num) => {
   return new Intl.NumberFormat('en-IN').format(num);
 };
 
+// Quantity formatting utility
+export const formatQuantity = (quantity, unit) => {
+  if (!unit) return `${quantity}`;
+  
+  quantity = parseFloat(quantity);
+  
+  // Convert grams to kg if >= 1000
+  if (unit === 'gm' && quantity >= 1000) {
+    return `${(quantity / 1000).toFixed(2)}Kg`;
+  }
+  
+  // Convert ml to liters if >= 1000
+  if (unit === 'ml' && quantity >= 1000) {
+    return `${(quantity / 1000).toFixed(2)}L`;
+  }
+  
+  return `${quantity.toFixed(2)}${unit}`;
+};
+
 // File download utilities
 export const downloadFile = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);

@@ -11,6 +11,7 @@ const ingredientRoutes = require('./routes/ingredientRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
 const estimationRoutes = require('./routes/estimationRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -43,6 +44,7 @@ app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/menus', menuRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/estimations', estimationRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

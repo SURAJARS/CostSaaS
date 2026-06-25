@@ -1,19 +1,19 @@
 const mongoose = require('mongoose');
 
 const EstimationSchema = new mongoose.Schema({
-  customerName: {
+  chefName: {
     type: String,
-    required: [true, 'Customer name is required'],
+    required: [true, 'Chef name is required'],
     trim: true
-  },
-  mobileNumber: {
-    type: String,
-    required: [true, 'Mobile number is required'],
-    match: [/^[0-9]{10}$/, 'Invalid mobile number']
   },
   eventDate: {
     type: Date,
     required: [true, 'Event date is required']
+  },
+  eventVenue: {
+    type: String,
+    required: [true, 'Event venue is required'],
+    trim: true
   },
   guestCount: {
     type: Number,
@@ -43,6 +43,13 @@ const EstimationSchema = new mongoose.Schema({
       unit: String,
       requiredQty: Number,
       currentRate: Number,
+      amount: Number,
+      _id: false
+    }
+  ],
+  expenses: [
+    {
+      description: String,
       amount: Number,
       _id: false
     }
@@ -90,7 +97,7 @@ const EstimationSchema = new mongoose.Schema({
 });
 
 // Index for faster searches
-EstimationSchema.index({ customerName: 'text' });
+EstimationSchema.index({ chefName: 'text' });
 EstimationSchema.index({ eventDate: 1 });
 EstimationSchema.index({ createdBy: 1 });
 EstimationSchema.index({ status: 1 });

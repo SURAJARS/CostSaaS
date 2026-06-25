@@ -21,7 +21,8 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  Autocomplete
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import EditIcon from '@mui/icons-material/Edit';
@@ -29,6 +30,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import recipeService from '../services/recipeService';
 import menuService from '../services/menuService';
 import ingredientService from '../services/ingredientService';
+import expenseService from '../services/expenseService';
 import DataTable from '../components/DataTable';
 
 const RecipesPage = () => {
@@ -36,6 +38,7 @@ const RecipesPage = () => {
   const [recipes, setRecipes] = useState([]);
   const [menus, setMenus] = useState([]);
   const [ingredients, setIngredients] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
@@ -48,13 +51,15 @@ const RecipesPage = () => {
   const [formData, setFormData] = useState({
     menuId: '',
     baseMembers: 10,
-    ingredients: []
+    ingredients: [],
+    expenses: []
   });
 
   useEffect(() => {
     fetchRecipes();
     fetchMenus();
     fetchIngredients();
+    fetchExpenses();
   }, [page, limit]);
 
   const fetchRecipes = async () => {
@@ -88,22 +93,40 @@ const RecipesPage = () => {
     }
   };
 
+  const fetchExpenses = async () => {
+    try {
+      const response = await expenseService.getExpenses(1, 100);
+      setExpenses(response.data.data);
+    } catch (err) {
+      console.error('Error fetching expenses:', err);
+    }
+  };
+
   const handleAddClick = () => {
     setSelectedRecipe(null);
     setFormData({
       menuId: '',
       baseMembers: 10,
-      ingredients: []
+      ingredients: [],
+      expenses: []
     });
     setDialogOpen(true);
   };
 
   const handleEditClick = (recipe) => {
     setSelectedRecipe(recipe);
+    
+    // Normalize expenses - handle both string IDs and populated objects
+    const normalizedExpenses = (recipe.expenses || []).map(exp => ({
+      expenseId: typeof exp.expenseId === 'string' ? exp.expenseId : exp.expenseId?._id,
+      amount: exp.amount
+    }));
+    
     setFormData({
       menuId: recipe.menuId._id,
       baseMembers: recipe.baseMembers,
-      ingredients: recipe.ingredients
+      ingredients: recipe.ingredients,
+      expenses: normalizedExpenses
     });
     setDialogOpen(true);
   };
@@ -144,6 +167,33 @@ const RecipesPage = () => {
     }));
   };
 
+  const handleAddExpense = () => {
+    setFormData(prev => ({
+      ...prev,
+      expenses: [...prev.expenses, { expenseId: '', amount: '' }]
+    }));
+  };
+
+  const handleRemoveExpense = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      expenses: prev.expenses.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleExpenseChange = (index, field, value) => {
+    const newExpenses = [...formData.expenses];
+    if (field === 'expenseId') {
+      newExpenses[index]['expenseId'] = value?._id || '';
+    } else {
+      newExpenses[index][field] = value;
+    }
+    setFormData(prev => ({
+      ...prev,
+      expenses: newExpenses
+    }));
+  };
+
   const handleSave = async () => {
     // Validate required fields
     if (!formData.menuId) {
@@ -175,11 +225,22 @@ const RecipesPage = () => {
       }
     }
 
+    // Validate expenses - all selected expenses must have amounts > 0
+    for (let exp of formData.expenses) {
+      if (exp.expenseId && (!exp.amount || exp.amount <= 0)) {
+        setError('All selected expenses must have a valid amount greater than 0');
+        return;
+      }
+    }
+    const validExpenses = formData.expenses.filter(exp => exp.expenseId && exp.amount > 0);
+
+    const finalFormData = { ...formData, expenses: validExpenses };
+
     try {
       if (selectedRecipe) {
-        await recipeService.updateRecipe(selectedRecipe._id, formData);
+        await recipeService.updateRecipe(selectedRecipe._id, finalFormData);
       } else {
-        await recipeService.createRecipe(formData);
+        await recipeService.createRecipe(finalFormData);
       }
       setDialogOpen(false);
       setError('');
@@ -273,7 +334,7 @@ const RecipesPage = () => {
             >
               {menus.map((menu) => (
                 <MenuItem key={menu._id} value={menu._id}>
-                  {menu.name_en} ({menu.name_ta})
+                  {menu.name_en}
                 </MenuItem>
               ))}
             </Select>
@@ -292,20 +353,15 @@ const RecipesPage = () => {
           <Typography variant="subtitle2">{t('recipes.ingredients')}</Typography>
           {formData.ingredients.map((ing, index) => (
             <Paper key={index} sx={{ p: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
-              <FormControl sx={{ flex: 1 }}>
-                <InputLabel>Ingredient</InputLabel>
-                <Select
-                  value={ing.ingredientId}
-                  onChange={(e) => handleIngredientChange(index, 'ingredientId', e.target.value)}
-                  label="Ingredient"
-                >
-                  {ingredients.map((ingredient) => (
-                    <MenuItem key={ingredient._id} value={ingredient._id}>
-                      {ingredient.name_en}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                sx={{ flex: 1 }}
+                options={ingredients}
+                getOptionLabel={(option) => option.name_en}
+                value={ingredients.find(ing2 => ing2._id === ing.ingredientId) || null}
+                onChange={(e, newValue) => handleIngredientChange(index, 'ingredientId', newValue?._id || '')}
+                renderInput={(params) => <TextField {...params} label="Ingredient" size="small" />}
+                isOptionEqualToValue={(option, value) => option._id === value._id}
+              />
               <TextField
                 type="number"
                 placeholder="Qty"
@@ -313,11 +369,13 @@ const RecipesPage = () => {
                 onChange={(e) => handleIngredientChange(index, 'quantity', e.target.value)}
                 inputProps={{ step: '0.01', min: '0' }}
                 sx={{ width: '80px' }}
+                size="small"
               />
               <FormControl sx={{ width: '80px' }}>
                 <Select
                   value={ing.unit}
                   onChange={(e) => handleIngredientChange(index, 'unit', e.target.value)}
+                  size="small"
                 >
                   <MenuItem value="kg">kg</MenuItem>
                   <MenuItem value="gm">gm</MenuItem>
@@ -336,6 +394,42 @@ const RecipesPage = () => {
 
           <Button onClick={handleAddIngredient} variant="outlined">
             {t('recipes.addIngredient')}
+          </Button>
+
+          <Typography variant="subtitle2">Expenses</Typography>
+          {formData.expenses.map((expense, index) => (
+            <Paper key={index} sx={{ p: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Autocomplete
+                sx={{ flex: 1 }}
+                options={expenses}
+                getOptionLabel={(option) => option.name_en || 'Unknown'}
+                value={
+                  expenses.find(exp => 
+                    exp._id === expense.expenseId || 
+                    exp._id === (typeof expense.expenseId === 'object' ? expense.expenseId?._id : expense.expenseId)
+                  ) || null
+                }
+                onChange={(e, newValue) => handleExpenseChange(index, 'expenseId', newValue)}
+                renderInput={(params) => <TextField {...params} label="Expense" size="small" />}
+                isOptionEqualToValue={(option, value) => option._id === value._id}
+              />
+              <TextField
+                type="number"
+                placeholder="Amount (₹)"
+                value={expense.amount || ''}
+                onChange={(e) => handleExpenseChange(index, 'amount', e.target.value ? parseFloat(e.target.value) : '')}
+                inputProps={{ step: '0.01', min: '0' }}
+                sx={{ width: '120px' }}
+                size="small"
+              />
+              <IconButton size="small" onClick={() => handleRemoveExpense(index)} color="error">
+                <DeleteIcon />
+              </IconButton>
+            </Paper>
+          ))}
+
+          <Button onClick={handleAddExpense} variant="outlined">
+            + Add Expense
           </Button>
         </DialogContent>
         <DialogActions>

@@ -6,6 +6,8 @@ const {
   consolidateIngredients,
   calculateIngredientCost,
   calculateRawMaterialCost,
+  consolidateExpenses,
+  calculateExpenseCost,
   calculateGrandTotal
 } = require('../utils/calculation');
 
@@ -54,13 +56,30 @@ class EstimationService {
       // Calculate costs
       const ingredientWithCosts = calculateIngredientCost(consolidatedIngredients);
       const rawMaterialCost = calculateRawMaterialCost(ingredientWithCosts);
+
+      // Build menu expenses structure
+      const menuExpenses = recipes
+        .filter(recipe => recipe.expenses && recipe.expenses.length > 0)
+        .map(recipe => ({
+          menuId: recipe.menuId._id,
+          baseMembers: recipe.baseMembers,
+          expenses: recipe.expenses
+        }));
+
+      // Consolidate expenses
+      const consolidatedExpenses = menuExpenses.length > 0
+        ? consolidateExpenses(menuExpenses, estimationData.guestCount)
+        : [];
+
+      const expenseCost = calculateExpenseCost(consolidatedExpenses);
       
       // Convert flat cost properties to nested additionalCost structure
       const additionalCost = {
         labourCost: estimationData.labourCost || 0,
         gasCost: estimationData.gasCost || 0,
         transportCost: estimationData.transportCost || 0,
-        miscellaneousCost: estimationData.miscellaneousCost || 0
+        miscellaneousCost: estimationData.miscellaneousCost || 0,
+        expenseCost: expenseCost
       };
       
       const costBreakdown = calculateGrandTotal(
@@ -79,12 +98,13 @@ class EstimationService {
 
       // Create estimation document
       const estimation = new Estimation({
-        customerName: estimationData.customerName,
-        mobileNumber: estimationData.mobileNumber,
+        chefName: estimationData.chefName,
         eventDate: estimationData.eventDate,
+        eventVenue: estimationData.eventVenue,
         guestCount: estimationData.guestCount,
         selectedMenus: enrichedSelectedMenus,
         ingredients: ingredientWithCosts,
+        expenses: consolidatedExpenses,
         rawMaterialCost,
         additionalCost,
         profitMargin: estimationData.profitMargin || 0,
