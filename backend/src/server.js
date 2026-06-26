@@ -24,6 +24,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://kasikannu.vercel.app',
+  'https://kkcwprofit.com',
   process.env.CORS_ORIGIN
 ].filter(Boolean);
 
