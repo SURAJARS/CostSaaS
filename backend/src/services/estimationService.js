@@ -12,6 +12,7 @@ const {
 } = require('../utils/calculation');
 
 class EstimationService {
+  
   async createEstimation(estimationData, userId) {
     try {
       const menuIds = estimationData.selectedMenus.map(m => m.menuId);
@@ -139,9 +140,165 @@ class EstimationService {
   }
 
   async updateEstimation(id, updateData) {
-    return await Estimation.findByIdAndUpdate(id, updateData, { new: true })
-      .populate('createdBy', 'firstName lastName email');
+
+  // Fetch existing estimation
+  const existingEstimation = await Estimation.findById(id);
+
+  if (!existingEstimation) {
+    throw new Error("Estimation not found");
   }
+
+  // Merge existing values with updated values
+  const estimationData = {
+    chefName: updateData.chefName ?? existingEstimation.chefName,
+    eventDate: updateData.eventDate ?? existingEstimation.eventDate,
+    eventVenue: updateData.eventVenue ?? existingEstimation.eventVenue,
+    guestCount: updateData.guestCount ?? existingEstimation.guestCount,
+    selectedMenus: updateData.selectedMenus ?? existingEstimation.selectedMenus,
+
+    labourCost:
+      updateData.labourCost ??
+      existingEstimation.additionalCost?.labourCost ??
+      0,
+
+    gasCost:
+      updateData.gasCost ??
+      existingEstimation.additionalCost?.gasCost ??
+      0,
+
+    transportCost:
+      updateData.transportCost ??
+      existingEstimation.additionalCost?.transportCost ??
+      0,
+
+    miscellaneousCost:
+      updateData.miscellaneousCost ??
+      existingEstimation.additionalCost?.miscellaneousCost ??
+      0,
+
+    profitMargin:
+      updateData.profitMargin ??
+      existingEstimation.profitMargin ??
+      0
+  };
+
+  const menuIds = estimationData.selectedMenus.map(m =>
+  m.menuId._id ? m.menuId._id : m.menuId
+  );
+      
+      // Get recipes for selected menus
+      const recipes = await Recipe.find({ menuId: { $in: menuIds }, status: 'active' })
+        .populate('ingredients.ingredientId');
+
+      // Get menu details for names
+      const menuDetails = await Menu.find({ _id: { $in: menuIds } });
+      const menuMap = {};
+      menuDetails.forEach(menu => {
+        menuMap[menu._id.toString()] = {
+          name_en: menu.name_en,
+          name_ta: menu.name_ta
+        };
+      });
+
+      // Build menu ingredients structure
+      const menuIngredients = recipes.map(recipe => ({
+        menuId: recipe.menuId._id,
+        baseMembers: recipe.baseMembers,
+        ingredients: recipe.ingredients
+      }));
+
+      // Consolidate ingredients
+      let consolidatedIngredients = consolidateIngredients(menuIngredients, estimationData.guestCount);
+
+      // Get current rates and ingredient units
+      consolidatedIngredients = await Promise.all(
+        consolidatedIngredients.map(async (ing) => {
+          const ingredient = await Ingredient.findById(ing.ingredientId);
+          return {
+            ...ing,
+            currentRate: ingredient?.currentRate || 0,
+            ingredientUnit: ingredient?.unit || 'kg', // The ingredient's base unit
+            recipeUnit: ing.unit // The unit used in recipe
+          };
+        })
+      );
+
+      // Calculate costs
+      const ingredientWithCosts = calculateIngredientCost(consolidatedIngredients);
+      const rawMaterialCost = calculateRawMaterialCost(ingredientWithCosts);
+
+      // Build menu expenses structure
+      const menuExpenses = recipes
+        .filter(recipe => recipe.expenses && recipe.expenses.length > 0)
+        .map(recipe => ({
+          menuId: recipe.menuId._id,
+          baseMembers: recipe.baseMembers,
+          expenses: recipe.expenses
+        }));
+
+      // Consolidate expenses
+      const consolidatedExpenses = menuExpenses.length > 0
+        ? consolidateExpenses(menuExpenses, estimationData.guestCount)
+        : [];
+
+      const expenseCost = calculateExpenseCost(consolidatedExpenses);
+      
+      // Convert flat cost properties to nested additionalCost structure
+      const additionalCost = {
+        labourCost: estimationData.labourCost || 0,
+        gasCost: estimationData.gasCost || 0,
+        transportCost: estimationData.transportCost || 0,
+        miscellaneousCost: estimationData.miscellaneousCost || 0,
+        expenseCost: expenseCost
+      };
+      // Calculate grand total
+const costBreakdown = calculateGrandTotal(
+  rawMaterialCost,
+  additionalCost,
+  estimationData.profitMargin || 0
+);
+
+// Enrich selected menus
+const enrichedSelectedMenus = estimationData.selectedMenus.map(menu => ({
+  menuId: menu.menuId._id ? menu.menuId._id : menu.menuId,
+  menuName_en: menu.menuName_en,
+  menuName_ta: menu.menuName_ta,
+  quantity: menu.quantity || 1
+}));
+
+// Update estimation
+const updatedEstimation = await Estimation.findByIdAndUpdate(
+  id,
+  {
+    chefName: estimationData.chefName,
+    eventDate: estimationData.eventDate,
+    eventVenue: estimationData.eventVenue,
+    guestCount: estimationData.guestCount,
+
+    selectedMenus: enrichedSelectedMenus,
+
+    ingredients: ingredientWithCosts,
+    expenses: consolidatedExpenses,
+
+    rawMaterialCost,
+
+    additionalCost,
+
+    profitMargin: estimationData.profitMargin,
+    profitAmount: costBreakdown.profitAmount,
+    grandTotal: costBreakdown.grandTotal,
+
+    updatedAt: new Date()
+  },
+  {
+    new: true
+  }
+).populate("createdBy", "firstName lastName email");
+
+return updatedEstimation;
+      
+
+}
 
   async deleteEstimation(id) {
     return await Estimation.findByIdAndDelete(id);

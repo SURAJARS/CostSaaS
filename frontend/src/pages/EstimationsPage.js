@@ -124,10 +124,10 @@ const EstimationsPage = () => {
       eventDate: estimation.eventDate?.split('T')[0],
       eventVenue: estimation.eventVenue,
       guestCount: estimation.guestCount,
-      labourCost: estimation.labourCost || 0,
-      gasCost: estimation.gasCost || 0,
-      transportCost: estimation.transportCost || 0,
-      miscellaneousCost: estimation.miscellaneousCost || 0,
+      labourCost: estimation.additionalCost?.labourCost || 0,
+      gasCost: estimation.additionalCost?.gasCost || 0,
+      transportCost: estimation.additionalCost?.transportCost || 0,
+      miscellaneousCost: estimation.additionalCost?.miscellaneousCost || 0,
       profitMargin: estimation.profitMargin || 0
     });
     const ingredientMap = {};
