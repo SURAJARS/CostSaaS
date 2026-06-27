@@ -46,7 +46,9 @@ const consolidateIngredients = (menuIngredients, guestCount) => {
       const requiredQty = calculateRequiredQty(ingredient.quantity, guestCount, baseMembers);
 
       if (consolidated[ingredientId]) {
-        consolidated[ingredientId].requiredQty += requiredQty;
+        // Convert the new ingredient's unit to the already-stored unit before adding
+        const convertedQty = convertUnit(requiredQty, ingredient.unit, consolidated[ingredientId].unit);
+        consolidated[ingredientId].requiredQty += convertedQty;
       } else {
         consolidated[ingredientId] = {
           ingredientId,
