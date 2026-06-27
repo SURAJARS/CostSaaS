@@ -116,10 +116,17 @@ const RecipesPage = () => {
       amount: exp.amount
     }));
     
+    // Normalize ingredients - extract IDs from nested objects
+    const normalizedIngredients = (recipe.ingredients || []).map(ing => ({
+      ingredientId: typeof ing.ingredientId === 'string' ? ing.ingredientId : ing.ingredientId?._id,
+      quantity: ing.quantity,
+      unit: ing.unit
+    }));
+    
     setFormData({
       menuId: recipe.menuId._id,
       baseMembers: recipe.baseMembers,
-      ingredients: recipe.ingredients,
+      ingredients: normalizedIngredients,
       expenses: normalizedExpenses
     });
     setDialogOpen(true);
