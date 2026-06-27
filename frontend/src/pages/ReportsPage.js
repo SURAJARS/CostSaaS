@@ -130,7 +130,7 @@ const ReportsPage = () => {
                 setData([]);
               }}
             >
-              By Customer
+              By Chef Name
             </Button>
           </Grid>
         </Grid>
