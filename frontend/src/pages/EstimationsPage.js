@@ -49,12 +49,14 @@ const EstimationsPage = () => {
   const [selectedEstimation, setSelectedEstimation] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [dishwiseIngredients, setDishwiseIngredients] = useState({});
   const [dishwiseExpenses, setDishwiseExpenses] = useState({});
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [editedIngredients, setEditedIngredients] = useState({});
+  const [menuSearchQuery, setMenuSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     chefName: '',
     eventDate: '',
@@ -98,6 +100,7 @@ const EstimationsPage = () => {
 
   const handleAddClick = () => {
     setSelectedEstimation(null);
+    setMenuSearchQuery('');
     setFormData({
       chefName: '',
       eventDate: '',
@@ -208,6 +211,33 @@ const EstimationsPage = () => {
     setDeleteConfirmOpen(true);
   };
 
+  const handleEstimationSearch = (query = null) => {
+    const searchTerm = query !== null ? query : searchQuery;
+
+    if (!searchTerm.trim()) {
+      fetchEstimations();
+      return;
+    }
+
+    // Filter estimations based on chef name, venue, or other details
+    const filtered = estimations.filter(estimation =>
+      estimation.chefName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      estimation.eventVenue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      estimation._id?.toString().includes(searchTerm)
+    );
+
+    setEstimations(filtered);
+  };
+
+  const handleEstimationSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    // Trigger search as user types (real-time)
+    if (query.trim() || query === '') {
+      handleEstimationSearch(query);
+    }
+  };
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -231,6 +261,16 @@ const EstimationsPage = () => {
         };
       }
     });
+  };
+
+  const getFilteredMenus = () => {
+    if (!menuSearchQuery.trim()) {
+      return menus;
+    }
+    return menus.filter(menu =>
+      menu.name_en.toLowerCase().includes(menuSearchQuery.toLowerCase()) ||
+      menu.name_ta.toLowerCase().includes(menuSearchQuery.toLowerCase())
+    );
   };
 
   const handleSave = async () => {
@@ -427,7 +467,15 @@ const EstimationsPage = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
+        <TextField
+          placeholder={t('common.search')}
+          value={searchQuery}
+          onChange={handleEstimationSearchInputChange}
+          size="small"
+          fullWidth
+          variant="outlined"
+        />
         <Button variant="contained" color="success" onClick={handleAddClick}>
           {t('estimations.addEstimation')}
         </Button>
@@ -443,7 +491,10 @@ const EstimationsPage = () => {
       />
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={() => {
+        setDialogOpen(false);
+        setMenuSearchQuery('');
+      }} maxWidth="sm" fullWidth>
         <DialogTitle>{t('estimations.addEstimation')}</DialogTitle>
         <DialogContent sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -484,7 +535,15 @@ const EstimationsPage = () => {
           />
 
           <Typography variant="subtitle2">{t('estimations.menus')}</Typography>
-          {menus.map((menu) => (
+          <TextField
+            placeholder="Search menus..."
+            value={menuSearchQuery}
+            onChange={(e) => setMenuSearchQuery(e.target.value)}
+            size="small"
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          {getFilteredMenus().map((menu) => (
             <FormControlLabel
               key={menu._id}
               control={

@@ -42,6 +42,7 @@ const RecipesPage = () => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     menuId: '',
     baseMembers: 10,
@@ -143,6 +144,34 @@ const RecipesPage = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleRecipeSearch = (query = null) => {
+    const searchTerm = query !== null ? query : searchQuery;
+
+    if (!searchTerm.trim()) {
+      fetchRecipes();
+      return;
+    }
+
+    // Filter recipes based on menu name
+    const filtered = recipes.filter(recipe =>
+      recipe.menuId?.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recipe.menuId?.name_ta?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recipe._id?.toString().includes(searchTerm)
+    );
+
+    // For actual API search if available, otherwise use client-side filtering
+    setRecipes(filtered);
+  };
+
+  const handleRecipeSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    // Trigger search as user types (real-time)
+    if (query.trim() || query === '') {
+      handleRecipeSearch(query);
+    }
   };
 
   const handleAddIngredient = () => {
@@ -305,7 +334,15 @@ const RecipesPage = () => {
     <Container maxWidth="lg" sx={{ py: 3 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
+        <TextField
+          placeholder={t('common.search')}
+          value={searchQuery}
+          onChange={handleRecipeSearchInputChange}
+          size="small"
+          fullWidth
+          variant="outlined"
+        />
         <Button variant="contained" color="success" onClick={handleAddClick}>
           {t('recipes.addRecipe')}
         </Button>
@@ -325,21 +362,16 @@ const RecipesPage = () => {
           {selectedRecipe ? t('recipes.editRecipe') : t('recipes.addRecipe')}
         </DialogTitle>
         <DialogContent sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>{t('recipes.menuName')}</InputLabel>
-            <Select
-              name="menuId"
-              value={formData.menuId}
-              onChange={handleFormChange}
-              label={t('recipes.menuName')}
-            >
-              {menus.map((menu) => (
-                <MenuItem key={menu._id} value={menu._id}>
-                  {menu.name_en}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            options={menus}
+            getOptionLabel={(option) => option.name_en}
+            value={menus.find(menu => menu._id === formData.menuId) || null}
+            onChange={(e, newValue) => handleFormChange({ target: { name: 'menuId', value: newValue?._id || '' } })}
+            renderInput={(params) => <TextField {...params} label={t('recipes.menuName')} />}
+            isOptionEqualToValue={(option, value) => option._id === value._id}
+            noOptionsText="No menus found"
+            clearIcon={null}
+          />
 
           <TextField
             label={t('recipes.baseMembers')}

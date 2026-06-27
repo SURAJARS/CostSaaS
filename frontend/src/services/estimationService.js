@@ -41,15 +41,24 @@ class EstimationService {
     });
   }
 
+  exportBulkToExcel(estimationIds) {
+    return axiosInstance.post('/estimations/export/bulk-excel', { ids: estimationIds }, {
+      responseType: 'blob'
+    }).then(response => response.data).catch(error => {
+      console.error('Bulk Excel export error:', error);
+      throw new Error(error.response?.statusText || 'Failed to export Excel');
+    });
+  }
+
   getReportsByDateRange(startDate, endDate, page = 1, limit = 10) {
     return axiosInstance.get('/estimations/report/date-range', {
       params: { startDate, endDate, page, limit }
     });
   }
 
-  getReportsByCustomer(customerName, page = 1, limit = 10) {
+  getReportsByCustomer(chefName, page = 1, limit = 10) {
     return axiosInstance.get('/estimations/report/customer', {
-      params: { customerName, page, limit }
+      params: { customerName: chefName, page, limit }
     });
   }
 

@@ -21,6 +21,7 @@ router.get('/', estimationController.getEstimations.bind(estimationController));
 // Export
 router.get('/:id/export/excel', estimationController.exportToExcel.bind(estimationController));
 router.get('/:id/export/pdf', estimationController.exportToPdf.bind(estimationController));
+router.post('/export/bulk-excel', estimationController.exportBulkToExcel.bind(estimationController));
 
 // Get by ID
 router.get('/:id', estimationController.getEstimationById.bind(estimationController));

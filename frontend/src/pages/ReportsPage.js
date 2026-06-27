@@ -83,12 +83,18 @@ const ReportsPage = () => {
       return;
     }
 
-    // Export first record as Excel (simplified)
     try {
-      const blob = await estimationService.exportToExcel(data[0]._id);
-      downloadFile(blob, `report_${new Date().getTime()}.xlsx`);
+      setLoading(true);
+      // Export all filtered records
+      const estimationIds = data.map(record => record._id);
+      const blob = await estimationService.exportBulkToExcel(estimationIds);
+      downloadFile(blob, `report_${reportType}_${new Date().getTime()}.xlsx`);
+      setSuccess('Exported successfully');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError('Error exporting report');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,7 +166,7 @@ const ReportsPage = () => {
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12}>
               <TextField
-                label={t('reports.customerName')}
+                label="Chef Name"
                 value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
                 fullWidth
@@ -194,25 +200,33 @@ const ReportsPage = () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5' }}>
-                  <TableCell>{t('estimations.customerName')}</TableCell>
-                  <TableCell>{t('estimations.mobileNumber')}</TableCell>
-                  <TableCell>{t('estimations.eventDate')}</TableCell>
-                  <TableCell>{t('estimations.guestCount')}</TableCell>
-                  <TableCell align="right">{t('estimations.grandTotal')}</TableCell>
-                  <TableCell>{t('estimations.status')}</TableCell>
+                  <TableCell>Chef Name</TableCell>
+                  <TableCell>Event Date</TableCell>
+                  <TableCell align="right">Guest Count</TableCell>
+                  <TableCell align="right">Total Expense</TableCell>
+                  <TableCell align="right">Profit</TableCell>
+                  <TableCell align="right">Grand Total</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.map((row) => (
-                  <TableRow key={row._id}>
-                    <TableCell>{row.customerName}</TableCell>
-                    <TableCell>{row.mobileNumber}</TableCell>
-                    <TableCell>{new Date(row.eventDate).toLocaleDateString('en-IN')}</TableCell>
-                    <TableCell>{row.guestCount}</TableCell>
-                    <TableCell align="right">{formatCurrency(row.grandTotal)}</TableCell>
-                    <TableCell>{row.status}</TableCell>
-                  </TableRow>
-                ))}
+                {data.map((row) => {
+                  const additionalCost = (row.additionalCost?.labourCost || 0) + 
+                                        (row.additionalCost?.gasCost || 0) + 
+                                        (row.additionalCost?.transportCost || 0) + 
+                                        (row.additionalCost?.miscellaneousCost || 0);
+                  const totalExpense = (row.rawMaterialCost || 0) + additionalCost;
+                  
+                  return (
+                    <TableRow key={row._id}>
+                      <TableCell>{row.chefName}</TableCell>
+                      <TableCell>{new Date(row.eventDate).toLocaleDateString('en-IN')}</TableCell>
+                      <TableCell align="right">{row.guestCount}</TableCell>
+                      <TableCell align="right">{formatCurrency(totalExpense)}</TableCell>
+                      <TableCell align="right">{formatCurrency(row.profitAmount || 0)}</TableCell>
+                      <TableCell align="right">{formatCurrency(row.grandTotal)}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Paper>

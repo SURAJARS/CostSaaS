@@ -61,16 +61,17 @@ const MenusPage = () => {
     fetchMenus();
   }, [fetchMenus]);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
+  const handleSearch = async (query = null) => {
+    const queryToUse = query !== null ? query : searchQuery;
+    
+    if (!queryToUse.trim()) {
       fetchMenus();
       return;
     }
 
     setLoading(true);
     try {
-      const response = await menuService.searchMenus(searchQuery, 1, limit);
+      const response = await menuService.searchMenus(queryToUse, 1, limit);
       setMenus(response.data.data);
       setTotal(response.data.pagination.total);
       setPage(1);
@@ -78,6 +79,15 @@ const MenusPage = () => {
       setError(err.response?.data?.message || 'Error searching menus');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    // Trigger search as user types (real-time)
+    if (query.trim() || query === '') {
+      handleSearch(query);
     }
   };
 
@@ -173,18 +183,14 @@ const MenusPage = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
-        <Box component="form" onSubmit={handleSearch} sx={{ display: 'flex', gap: 1, flex: 1 }}>
-          <TextField
-            placeholder={t('common.search')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            size="small"
-            fullWidth
-          />
-          <Button type="submit" variant="contained">
-            {t('common.search')}
-          </Button>
-        </Box>
+        <TextField
+          placeholder={t('common.search')}
+          value={searchQuery}
+          onChange={handleSearchInputChange}
+          size="small"
+          fullWidth
+          variant="outlined"
+        />
         <Button variant="contained" color="success" onClick={handleAddClick}>
           {t('menus.addMenu')}
         </Button>

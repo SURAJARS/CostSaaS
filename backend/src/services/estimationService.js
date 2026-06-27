@@ -160,9 +160,9 @@ class EstimationService {
     }, skip, limit);
   }
 
-  async getEstimationsByCustomer(customerName, skip = 0, limit = 10) {
+  async getEstimationsByCustomer(chefName, skip = 0, limit = 10) {
     return this.getEstimations({
-      customerName: { $regex: customerName, $options: 'i' }
+      chefName: { $regex: chefName, $options: 'i' }
     }, skip, limit);
   }
 
@@ -225,6 +225,15 @@ class EstimationService {
         statusDistribution: statusCounts,
         menuAnalytics: menuCosts
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getEstimationsByIds(ids) {
+    try {
+      const estimations = await Estimation.find({ _id: { $in: ids } });
+      return estimations;
     } catch (error) {
       throw error;
     }

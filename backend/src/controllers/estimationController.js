@@ -140,6 +140,99 @@ class EstimationController {
     }
   }
 
+  async exportBulkToExcel(req, res, next) {
+    try {
+      const { ids } = req.body;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ success: false, message: 'No estimation IDs provided' });
+      }
+
+      // Fetch all estimations
+      const estimations = await estimationService.getEstimationsByIds(ids);
+      if (estimations.length === 0) {
+        return res.status(404).json({ success: false, message: 'No estimations found' });
+      }
+
+      try {
+        // Create a workbook with multiple sheets (one per estimation)
+        const ExcelJS = require('exceljs');
+        const workbook = new ExcelJS.Workbook();
+
+        for (const estimation of estimations) {
+          // Create a unique worksheet name
+let baseSheetName = (estimation.chefName || "Estimation").substring(0, 31);
+let sheetName = baseSheetName;
+let counter = 1;
+
+// Ensure worksheet name is unique
+while (workbook.getWorksheet(sheetName)) {
+  const suffix = ` (${counter++})`;
+
+  // Excel sheet names max 31 chars
+  sheetName =
+    baseSheetName.substring(0, 31 - suffix.length) + suffix;
+}
+
+const worksheet = workbook.addWorksheet(sheetName); 
+          
+          // Add header
+          worksheet.columns = [
+            { header: 'Chef Name', key: 'chefName', width: 20 },
+            { header: 'Event Date', key: 'eventDate', width: 15 },
+            { header: 'Event Venue', key: 'eventVenue', width: 20 },
+            { header: 'Guest Count', key: 'guestCount', width: 12 },
+            { header: 'Raw Material Cost', key: 'rawMaterialCost', width: 18 },
+            { header: 'Labour Cost', key: 'labourCost', width: 15 },
+            { header: 'Gas Cost', key: 'gasCost', width: 12 },
+            { header: 'Transport Cost', key: 'transportCost', width: 15 },
+            { header: 'Miscellaneous Cost', key: 'miscellaneousCost', width: 18 },
+            { header: 'Profit Margin (%)', key: 'profitMargin', width: 15 },
+            { header: 'Profit Amount', key: 'profitAmount', width: 15 },
+            { header: 'Grand Total', key: 'grandTotal', width: 15 }
+          ];
+
+          // Add data row
+          worksheet.addRow({
+            chefName: estimation.chefName,
+            eventDate: new Date(estimation.eventDate).toLocaleDateString('en-IN'),
+            eventVenue: estimation.eventVenue,
+            guestCount: estimation.guestCount,
+            rawMaterialCost: estimation.rawMaterialCost || 0,
+            labourCost: estimation.additionalCost?.labourCost || 0,
+            gasCost: estimation.additionalCost?.gasCost || 0,
+            transportCost: estimation.additionalCost?.transportCost || 0,
+            miscellaneousCost: estimation.additionalCost?.miscellaneousCost || 0,
+            profitMargin: estimation.profitMargin || 0,
+            profitAmount: estimation.profitAmount || 0,
+            grandTotal: estimation.grandTotal || 0
+          });
+
+          // Style header
+          worksheet.getRow(1).font = { bold: true };
+          worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
+        }
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="estimations_bulk_${new Date().getTime()}.xlsx"`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+      } catch (excelError) {
+        console.error('Excel generation error:', excelError);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: 'Failed to generate Excel file' });
+        } else {
+          res.end();
+        }
+      }
+    } catch (error) {
+      console.error('Bulk export error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, message: 'Error exporting to Excel' });
+      }
+    }
+  }
+
   async getReportsByDateRange(req, res, next) {
     try {
       const { startDate, endDate } = req.query;

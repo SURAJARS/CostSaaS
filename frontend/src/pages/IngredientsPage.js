@@ -50,9 +50,10 @@ const IngredientsPage = () => {
     fetchIngredients();
   }, [fetchIngredients]);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
+  const handleSearch = async (query = null) => {
+    const queryToUse = query !== null ? query : searchQuery;
+    
+    if (!queryToUse.trim()) {
       fetchIngredients();
       return;
     }
@@ -60,7 +61,7 @@ const IngredientsPage = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await ingredientService.searchIngredients(searchQuery, 1, limit);
+      const response = await ingredientService.searchIngredients(queryToUse, 1, limit);
       setIngredients(response.data.data);
       setTotal(response.data.pagination.total);
       setPage(1);
@@ -68,6 +69,15 @@ const IngredientsPage = () => {
       setError(err.response?.data?.message || 'Error searching ingredients');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    // Trigger search as user types (real-time)
+    if (query.trim() || query === '') {
+      handleSearch(query);
     }
   };
 
@@ -148,18 +158,14 @@ const IngredientsPage = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
-        <Box component="form" onSubmit={handleSearch} sx={{ display: 'flex', gap: 1, flex: 1 }}>
-          <TextField
-            placeholder={t('common.search')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            size="small"
-            fullWidth
-          />
-          <Button type="submit" variant="contained">
-            {t('common.search')}
-          </Button>
-        </Box>
+        <TextField
+          placeholder={t('common.search')}
+          value={searchQuery}
+          onChange={handleSearchInputChange}
+          size="small"
+          fullWidth
+          variant="outlined"
+        />
         <Button variant="contained" color="success" onClick={handleAddClick}>
           {t('ingredients.addIngredient')}
         </Button>

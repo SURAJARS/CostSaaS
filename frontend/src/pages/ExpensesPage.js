@@ -28,6 +28,7 @@ const ExpensesPage = () => {
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name_en: '',
     description: ''
@@ -79,6 +80,32 @@ const ExpensesPage = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleExpenseSearch = (query = null) => {
+    const searchTerm = query !== null ? query : searchQuery;
+
+    if (!searchTerm.trim()) {
+      fetchExpenses();
+      return;
+    }
+
+    // Filter expenses based on name
+    const filtered = expenses.filter(expense =>
+      expense.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    setExpenses(filtered);
+  };
+
+  const handleExpenseSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    // Trigger search as user types (real-time)
+    if (query.trim() || query === '') {
+      handleExpenseSearch(query);
+    }
   };
 
   const handleSave = async () => {
@@ -154,7 +181,15 @@ const ExpensesPage = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
+        <TextField
+          placeholder="Search expenses..."
+          value={searchQuery}
+          onChange={handleExpenseSearchInputChange}
+          size="small"
+          fullWidth
+          variant="outlined"
+        />
         <Button variant="contained" color="success" onClick={handleAddClick}>
           + Add Expense
         </Button>
