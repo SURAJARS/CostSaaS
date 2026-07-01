@@ -74,7 +74,7 @@ const RecipesPage = () => {
 
   const fetchIngredients = useCallback(async () => {
     try {
-      const response = await ingredientService.getIngredients(1, 100);
+      const response = await ingredientService.getIngredients(1, 500);
       setIngredients(response.data.data);
     } catch (err) {
       console.error('Error fetching ingredients:', err);
