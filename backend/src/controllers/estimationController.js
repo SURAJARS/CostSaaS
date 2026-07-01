@@ -101,9 +101,14 @@ class EstimationController {
       if (!estimation) {
         return res.status(404).json({ success: false, message: 'Estimation not found' });
       }
+      const ingredientsByMenu =
+        await estimationService.buildIngredientsByMenu(
+          estimation.selectedMenus,
+          estimation.guestCount
+        );
 
       try {
-        const workbook = await generateExcelReport(estimation, process.env.COMPANY_NAME);
+        const workbook = await generateExcelReport(estimation,ingredientsByMenu, process.env.COMPANY_NAME);
         
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="estimation_${estimation._id}.xlsx"`);
