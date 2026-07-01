@@ -1,7 +1,6 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
-
 // ======================================
 // Format Quantity for Display
 // ======================================
@@ -35,7 +34,15 @@ const formatQuantity = (quantity, unit) => {
   };
 };
 
-const generatePdfReport = (estimation, companyName = 'Your Catering Business') => {
+const generatePdfReport = (
+    reportData
+) => {
+
+    const {
+        estimation,
+        ingredientsByMenu,
+        companyName = 'Your Catering Business'
+    } = reportData;
   return new Promise((resolve, reject) => {
     try {
       // ======================================
@@ -103,6 +110,8 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
 
       const stream = fs.createWriteStream(filepath);
       doc.pipe(stream);
+
+      
 
       // ===============================
       // Header
@@ -474,6 +483,211 @@ const generatePdfReport = (estimation, companyName = 'Your Catering Business') =
           align: 'center'
         });
 
+      // ======================================
+      // Kitchen Preparation Sheet
+      // ======================================
+
+      doc.addPage();
+
+      const drawKitchenPreparationSheet = (
+        doc,
+        estimation,
+        ingredientsByMenu
+      ) => {
+
+        const startX = 50;
+        const tableWidth = 450;
+        const colWidths = [50, 230, 170];
+
+        let y = 50;
+
+        // ===============================
+        // Page Title
+        // ===============================
+        doc
+          .font('Helvetica-Bold')
+          .fontSize(18)
+          .fillColor('#000000')
+          .text('Kitchen Preparation Sheet', {
+            align: 'center'
+          });
+
+        doc.moveDown(0.6);
+
+        y = doc.y;
+
+        // No data
+        if (!ingredientsByMenu || ingredientsByMenu.length === 0) {
+          doc
+            .font('Helvetica')
+            .fontSize(11)
+            .text('No kitchen preparation data available.');
+          return;
+        }
+
+        // =====================================
+        // Loop through every selected menu
+        // =====================================
+        ingredientsByMenu.forEach(menu => {
+
+          // Page break if required
+          if (y > 700) {
+            doc.addPage();
+            y = 50;
+          }
+
+          // Menu Title
+          doc
+            .font('Helvetica-Bold')
+            .fontSize(14)
+            .fillColor('#000000')
+            .text(menu.menuName_en || 'Unnamed Menu', startX, y);
+
+          y = doc.y + 8;
+
+          // ===============================
+          // Table Header
+          // ===============================
+          doc
+            .save()
+            .fillColor('#F2F2F2')
+            .rect(startX, y, tableWidth, 22)
+            .fill()
+            .restore();
+
+          doc
+            .strokeColor('#CCCCCC')
+            .rect(startX, y, tableWidth, 22)
+            .stroke();
+
+          doc
+            .fillColor('#000000')
+            .font('Helvetica-Bold')
+            .fontSize(10);
+
+          doc.text('S.No', startX + 5, y + 6, {
+          width: colWidths[0],
+          align: 'center'
+        });
+
+        doc.text('Ingredient', startX + colWidths[0] + 5, y + 6, {
+          width: colWidths[1]
+        });
+
+        doc.text(
+          'Required Qty',
+          startX + colWidths[0] + colWidths[1] + 5,
+          y + 6,
+          {
+            width: colWidths[2],
+            align: 'center'
+          }
+        );
+
+          y += 22;
+
+          // ===============================
+          // Ingredients
+          // ===============================
+          doc.font('Helvetica').fontSize(10);
+
+          (menu.ingredients || []).forEach((ingredient, index) => {
+
+            if (y > 730) {
+              doc.addPage();
+              y = 50;
+            }
+
+            if (index % 2 === 0) {
+              doc
+                .rect(startX, y, tableWidth, 20)
+                .fill('#FAFAFA');
+            }
+
+            doc.fillColor('#000000');
+
+            const formattedQty = formatQuantity(
+              ingredient.requiredQty || 0,
+              ingredient.unit || ''
+            );
+
+           // S.No
+            doc
+              .fillColor('#000000')
+              .font('Helvetica')
+              .text(
+                index + 1,
+                startX + 5,
+                y + 5,
+                {
+                  width: colWidths[0],
+                  align: 'center'
+                }
+              );
+
+            // Ingredient
+            doc.text(
+              ingredient.ingredientName_en || 'Unknown',
+              startX + colWidths[0] + 5,
+              y + 5,
+              {
+                width: colWidths[1] - 10
+              }
+            );
+
+            // Required Qty Box
+            const qtyX = startX + colWidths[0] + colWidths[1] + 20;
+
+            doc
+            .fillColor('#000000')
+            .font('Helvetica-Bold')
+            .text(
+              `${formattedQty.quantity} ${formattedQty.unit}`,
+              qtyX,
+              y + 5,
+              {
+                width: 110,
+                align: 'center'
+              }
+            );
+
+            doc
+              .fillColor('#000000')
+              .font('Helvetica-Bold')
+              .text(
+                `${formattedQty.quantity} ${formattedQty.unit}`,
+                qtyX,
+                y + 5,
+                {
+                  width: 110,
+                  align: 'center'
+                }
+              );
+
+            doc.fillColor('#000000');
+
+            doc
+              .strokeColor('#DDDDDD')
+              .moveTo(startX, y + 20)
+              .lineTo(startX + tableWidth, y + 20)
+              .stroke();
+
+            y += 20;
+          });
+
+          y += 20;
+
+        });
+        doc.moveDown();
+
+        
+      };
+      drawKitchenPreparationSheet(
+        doc,
+        estimation,
+        ingredientsByMenu
+      );
+      
       doc.end();
 
       stream.on('finish', () => {

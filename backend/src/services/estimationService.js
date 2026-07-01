@@ -4,6 +4,7 @@ const Ingredient = require('../models/Ingredient');
 const Menu = require('../models/Menu');
 const {
   consolidateIngredients,
+  calculateRequiredQty,
   calculateIngredientCost,
   calculateRawMaterialCost,
   consolidateExpenses,
@@ -12,6 +13,89 @@ const {
 } = require('../utils/calculation');
 
 class EstimationService {
+  // ======================================
+// Build Ingredients By Menu
+// ======================================
+async buildIngredientsByMenu(selectedMenus, guestCount) {
+
+  const menuIds = selectedMenus.map(menu =>
+    menu.menuId._id ? menu.menuId._id : menu.menuId
+  );
+
+  const recipes = await Recipe.find({
+    menuId: { $in: menuIds },
+    status: 'active'
+  }).populate('ingredients.ingredientId');
+
+  const menuDetails = await Menu.find({
+    _id: { $in: menuIds }
+  });
+
+  const menuMap = {};
+
+  menuDetails.forEach(menu => {
+
+    menuMap[menu._id.toString()] = {
+
+      name_en: menu.name_en,
+      name_ta: menu.name_ta
+
+    };
+     });
+     const ingredientsByMenu = [];
+     for (const recipe of recipes) {
+
+  const menuId = recipe.menuId._id
+    ? recipe.menuId._id.toString()
+    : recipe.menuId.toString();
+
+  const menuData = {
+
+    menuId,
+
+    menuName_en: menuMap[menuId]?.name_en || 'Unknown',
+
+    menuName_ta: menuMap[menuId]?.name_ta || 'Unknown',
+
+    ingredients: []
+
+  };
+  recipe.ingredients.forEach(ingredient => {
+    if (!ingredient.ingredientId) {
+    return;
+  }
+
+  menuData.ingredients.push({
+
+    ingredientId: ingredient.ingredientId?._id || ingredient.ingredientId,
+
+    ingredientName_en:
+  ingredient.ingredientName_en ||
+  ingredient.ingredientId?.name_en ||
+  'Unknown',
+
+ingredientName_ta:
+  ingredient.ingredientName_ta ||
+  ingredient.ingredientId?.name_ta ||
+  'Unknown',
+
+    unit: ingredient.unit,
+
+    requiredQty: calculateRequiredQty(
+      ingredient.quantity,
+      guestCount,
+      recipe.baseMembers
+    )
+
+  });
+
+}
+);
+ingredientsByMenu.push(menuData);
+
+}
+return ingredientsByMenu;
+}
   
   async createEstimation(estimationData, userId) {
     try {

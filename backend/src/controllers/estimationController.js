@@ -132,8 +132,20 @@ class EstimationController {
       if (!estimation) {
         return res.status(404).json({ success: false, message: 'Estimation not found' });
       }
+      const ingredientsByMenu =
+    await estimationService.buildIngredientsByMenu(
+        estimation.selectedMenus,
+        estimation.guestCount
+    );
 
-      const filename = await generatePdfReport(estimation, process.env.COMPANY_NAME);
+const reportData = {
+    estimation,
+    ingredientsByMenu,
+    companyName: process.env.COMPANY_NAME
+};
+
+const filename = await generatePdfReport(reportData);
+
       res.download(`uploads/${filename}`, `estimation_${estimation._id}.pdf`);
     } catch (error) {
       next(error);
