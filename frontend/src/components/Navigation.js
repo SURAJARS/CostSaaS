@@ -68,7 +68,7 @@ const Navigation = ({ onMenuClick }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
           <img
             src="/logo.png"
-            alt="KKCW Logo"
+            alt="ARS Logo"
             style={{
               height: 40,
               width: 40,
@@ -77,7 +77,7 @@ const Navigation = ({ onMenuClick }) => {
             }}
           />
           <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-            KKCW
+            ARS
           </Typography>
         </Box>
         <Box sx={{ flexGrow: 1 }} />

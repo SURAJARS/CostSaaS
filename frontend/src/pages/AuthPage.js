@@ -66,7 +66,7 @@ const AuthPage = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
             <img
               src="/logo.png"
-              alt="KKCW Logo"
+              alt="ARS Logo"
               style={{
                 height: 150,
                 width: 150,
