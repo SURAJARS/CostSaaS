@@ -10,7 +10,6 @@ import {
   DialogActions,
   IconButton,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   TextField,
