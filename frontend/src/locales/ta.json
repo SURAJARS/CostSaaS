@@ -27,7 +27,10 @@
     "export": "ஏற்றுமதி",
     "print": "அச்சு",
     "active": "செயல்படுத்த",
-    "inactive": "செயல்படுத்தாத"
+    "inactive": "செயல்படுத்தாத",
+    "actions": "நடவடிக்கைகள்",
+    "confirmDelete": "நீக்கு உறுதிப்படுத்த",
+    "deleteConfirmMessage": "இந்த உருப்படியை நீக்க நீங்கள் உறுதியாக இருக்கிறீர்களா?"
   },
   "auth": {
     "login": "உள்நுழைவு",
@@ -137,6 +140,33 @@
     "removeIngredient": "பொருளை நீக்கவும்",
     "selectMenu": "மெனுவைத் தேர்ந்தெடுக்க",
     "status": "நிலை"
+  },
+  "combos": {
+    "title": "கூட்டாண்ட வகைகள்",
+    "nameEnglish": "பெயர் (ஆங்கிலம்)",
+    "nameTamil": "பெயர் (தமிழ்)",
+    "descriptionEnglish": "விளக்கம் (ஆங்கிலம்)",
+    "descriptionTamil": "விளக்கம் (தமிழ்)",
+    "baseMembers": "அடிப்படை உறுப்பினர்கள்",
+    "selectedMenuItems": "தேர்ந்தெடுக்கப்பட்ட மெனு பொருட்கள்",
+    "addMenuItems": "மெனு பொருட்களைச் சேர்க்க",
+    "ingredients": "பொருட்கள்",
+    "ingredientName": "பொருள் பெயர்",
+    "quantity": "அளவு",
+    "unit": "அலகு",
+    "addIngredient": "பொருள் சேர்க்க",
+    "expenses": "செலவுகள்",
+    "expenseType": "செலவு வகை",
+    "amount": "தொகை",
+    "addExpense": "செலவுச் சேர்க்க",
+    "status": "நிலை",
+    "addCombo": "கூட்டாண்ட வகை சேர்க்க",
+    "editCombo": "கூட்டாண்ட வகை திருத்தவும்",
+    "deleteCombo": "கூட்டாண்ட வகையை நீக்கவும்",
+    "comboCreated": "கூட்டாண்ட வகை வெற்றிகரமாக உருவாக்கப்பட்டது",
+    "comboUpdated": "கூட்டாண்ட வகை வெற்றிகரமாக புதுப்பிக்கப்பட்டது",
+    "comboDeleted": "கூட்டாண்ட வகை வெற்றிகரமாக நீக்கப்பட்டது",
+    "menuItems": "மெனு பொருட்கள்"
   },
   "estimations": {
     "title": "மதிப்பீடுகள்",

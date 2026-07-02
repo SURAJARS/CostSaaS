@@ -30,6 +30,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import estimationService from '../services/estimationService';
 import menuService from '../services/menuService';
 import recipeService from '../services/recipeService';
+import comboService from '../services/comboService';
 import DataTable from '../components/DataTable';
 import { formatCurrency, downloadFile, formatQuantity } from '../utils/helpers';
 
@@ -38,6 +39,7 @@ const EstimationsPage = () => {
   const theme = useTheme();
   const [estimations, setEstimations] = useState([]);
   const [menus, setMenus] = useState([]);
+  const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -57,6 +59,8 @@ const EstimationsPage = () => {
   const [editFormData, setEditFormData] = useState({});
   const [editedIngredients, setEditedIngredients] = useState({});
   const [menuSearchQuery, setMenuSearchQuery] = useState('');
+  const [comboSearchQuery, setComboSearchQuery] = useState('');
+  const [selectedCombos, setSelectedCombos] = useState([]);
   const [formData, setFormData] = useState({
     chefName: '',
     eventDate: '',
@@ -93,14 +97,26 @@ const EstimationsPage = () => {
     }
   }, []);
 
+  const fetchCombos = useCallback(async () => {
+    try {
+      const response = await comboService.getCombos(1, 100, 'active');
+      setCombos(response.data.data);
+    } catch (err) {
+      console.error('Error fetching combos:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchEstimations();
     fetchMenus();
-  }, [fetchEstimations, fetchMenus]);
+    fetchCombos();
+  }, [fetchEstimations, fetchMenus, fetchCombos]);
 
   const handleAddClick = () => {
     setSelectedEstimation(null);
     setMenuSearchQuery('');
+    setComboSearchQuery('');
+    setSelectedCombos([]);
     setFormData({
       chefName: '',
       eventDate: '',
@@ -273,6 +289,73 @@ const EstimationsPage = () => {
     );
   };
 
+  const getFilteredCombos = () => {
+    if (!comboSearchQuery.trim()) {
+      return combos;
+    }
+    return combos.filter(combo =>
+      combo.name_en.toLowerCase().includes(comboSearchQuery.toLowerCase()) ||
+      combo.name_ta.toLowerCase().includes(comboSearchQuery.toLowerCase())
+    );
+  };
+
+  const handleComboToggle = (comboId) => {
+    setSelectedCombos(prev =>
+      prev.includes(comboId)
+        ? prev.filter(id => id !== comboId)
+        : [...prev, comboId]
+    );
+  };
+
+  const handleAddSelectedCombos = () => {
+    // Helper to extract menuId as string (handles both string IDs and object references)
+    const getMenuIdString = (menuId) => {
+      if (!menuId) return '';
+      if (typeof menuId === 'object' && menuId._id) return String(menuId._id).trim();
+      return String(menuId).trim();
+    };
+
+    const comboIds = selectedCombos;
+    let addedCount = 0;
+    let addedMenus = [];
+
+    comboIds.forEach(comboId => {
+      const combo = combos.find(c => c._id === comboId);
+      if (combo?.selectedMenus?.length > 0) {
+        const newMenus = combo.selectedMenus
+          .filter(m => {
+            const menuIdStr = getMenuIdString(m.menuId);
+            return !formData.selectedMenus.find(sm => {
+              const smIdStr = getMenuIdString(sm.menuId);
+              return smIdStr === menuIdStr;
+            });
+          })
+          .map(m => ({
+            menuId: getMenuIdString(m.menuId)
+          }));
+        
+        if (newMenus.length > 0) {
+          addedMenus.push(...newMenus);
+          addedCount += newMenus.length;
+        }
+      }
+    });
+
+    if (addedCount > 0) {
+      setFormData(prev => ({
+        ...prev,
+        selectedMenus: [...prev.selectedMenus, ...addedMenus]
+      }));
+      setSuccess(`Added ${addedCount} item(s) from ${selectedCombos.length} combo(s)`);
+      setTimeout(() => setSuccess(''), 3000);
+      setSelectedCombos([]);
+      setComboSearchQuery('');
+      setError('');
+    } else {
+      setError('No new items to add from selected combos');
+    }
+  };
+
   const handleSave = async () => {
     if (!formData.chefName || !formData.eventDate || !formData.eventVenue || formData.selectedMenus.length === 0) {
       setError('Please fill all required fields');
@@ -295,6 +378,9 @@ const EstimationsPage = () => {
 
       await estimationService.createEstimation(payload);
       setDialogOpen(false);
+      setSelectedCombos([]);
+      setMenuSearchQuery('');
+      setComboSearchQuery('');
       setError('');
       setSuccess('Estimation created successfully');
       fetchEstimations();
@@ -494,6 +580,8 @@ const EstimationsPage = () => {
       <Dialog open={dialogOpen} onClose={() => {
         setDialogOpen(false);
         setMenuSearchQuery('');
+        setComboSearchQuery('');
+        setSelectedCombos([]);
       }} maxWidth="sm" fullWidth>
         <DialogTitle>{t('estimations.addEstimation')}</DialogTitle>
         <DialogContent sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -555,6 +643,55 @@ const EstimationsPage = () => {
               label={`${menu.name_en} (${menu.name_ta})`}
             />
           ))}
+
+          <Typography variant="subtitle2" sx={{ mt: 2 }}>Combos</Typography>
+          <TextField
+            placeholder="Search combos..."
+            value={comboSearchQuery}
+            onChange={(e) => setComboSearchQuery(e.target.value)}
+            size="small"
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          {getFilteredCombos().length === 0 ? (
+            <Typography variant="body2" sx={{ py: 1, color: 'text.secondary' }}>
+              No combos available
+            </Typography>
+          ) : (
+            <>
+              {getFilteredCombos().map((combo) => (
+                <FormControlLabel
+                  key={combo._id}
+                  control={
+                    <Checkbox
+                      checked={selectedCombos.includes(combo._id)}
+                      onChange={() => handleComboToggle(combo._id)}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', pr: 2 }}>
+                      <Typography variant="body2">
+                        {combo.name_en} ({combo.name_ta})
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {combo.selectedMenus?.length || 0} items
+                      </Typography>
+                    </Box>
+                  }
+                />
+              ))}
+              <Button
+                variant="contained"
+                color="success"
+                fullWidth
+                onClick={handleAddSelectedCombos}
+                disabled={selectedCombos.length === 0}
+                sx={{ mt: 1, mb: 2 }}
+              >
+                Add Selected Combos ({selectedCombos.length})
+              </Button>
+            </>
+          )}
 
           <TextField
             label={t('estimations.labourCost')}

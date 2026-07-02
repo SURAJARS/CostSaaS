@@ -18,6 +18,7 @@ import Dashboard from './pages/Dashboard';
 import IngredientsPage from './pages/IngredientsPage';
 import MenusPage from './pages/MenusPage';
 import RecipesPage from './pages/RecipesPage';
+import ComboPage from './pages/ComboPage';
 import EstimationsPage from './pages/EstimationsPage';
 import ExpensesPage from './pages/ExpensesPage';
 import ReportsPage from './pages/ReportsPage';
@@ -75,6 +76,7 @@ const AppContent = () => {
                       <Route path="/expenses" element={<ExpensesPage />} />
                       <Route path="/menus" element={<MenusPage />} />
                       <Route path="/recipes" element={<RecipesPage />} />
+                      <Route path="/combos" element={<ComboPage />} />
                       <Route path="/estimations" element={<EstimationsPage />} />
                       <Route path="/reports" element={<ReportsPage />} />
                       <Route path="/profile" element={<ProfilePage />} />

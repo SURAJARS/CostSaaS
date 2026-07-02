@@ -13,11 +13,14 @@ import {
   useTheme
 } from '@mui/material';
 
-const DataTable = ({ columns, rows, loading = false, pagination = null, onPageChange, onRowsPerPageChange }) => {
+const DataTable = ({ columns, rows = [], loading = false, pagination = null, onPageChange, onRowsPerPageChange }) => {
   const theme = useTheme();
   
   const headerBgColor = theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#f5f5f5';
   const headerTextColor = theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.text.primary;
+
+  // Ensure rows is always an array
+  const safeRows = Array.isArray(rows) ? rows : [];
 
   return (
     <Box>
@@ -43,14 +46,14 @@ const DataTable = ({ columns, rows, loading = false, pagination = null, onPageCh
                   <CircularProgress />
                 </TableCell>
               </TableRow>
-            ) : rows.length === 0 ? (
+            ) : safeRows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} align="center" sx={{ py: 3 }}>
                   No data available
                 </TableCell>
               </TableRow>
             ) : (
-              rows.map((row, index) => (
+              safeRows.map((row, index) => (
                 <TableRow key={index} hover>
                   {columns.map((column) => (
                     <TableCell key={column.id} align={column.align || 'left'}>

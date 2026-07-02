@@ -101,11 +101,47 @@ const validateExpense = (data) => {
   return schema.validate(data);
 };
 
+const validateCombo = (data) => {
+  const schema = Joi.object({
+    name_en: Joi.string().trim().required(),
+    name_ta: Joi.string().trim().required(),
+    description_en: Joi.string().allow('', null).optional(),
+    description_ta: Joi.string().allow('', null).optional(),
+    baseMembers: Joi.number().min(1).required(),
+    selectedMenus: Joi.array().items(
+      Joi.object({
+        menuId: Joi.string().trim().required(),
+        menuName_en: Joi.string().allow('', null).optional(),
+        menuName_ta: Joi.string().allow('', null).optional()
+      }).unknown(true)
+    ).min(1).required(),
+    ingredients: Joi.array().items(
+      Joi.object({
+        ingredientId: Joi.string().trim().required(),
+        ingredientName_en: Joi.string().allow('', null).optional(),
+        ingredientName_ta: Joi.string().allow('', null).optional(),
+        quantity: Joi.number().required(),
+        unit: Joi.string().required()
+      }).unknown(true)
+    ).min(1).required(),
+    expenses: Joi.array().items(
+      Joi.object({
+        expenseId: Joi.string().trim().required(),
+        amount: Joi.number().min(0).required()
+      }).unknown(true)
+    ).default([]),
+    status: Joi.string().valid('active', 'inactive').optional()
+  }).unknown(true);
+
+  return schema.validate(data);
+};
+
 module.exports = {
   validateUser,
   validateIngredient,
   validateMenu,
   validateRecipe,
   validateEstimation,
-  validateExpense
+  validateExpense,
+  validateCombo
 };

@@ -13,6 +13,7 @@ const menuRoutes = require('./routes/menuRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
 const estimationRoutes = require('./routes/estimationRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const comboRoutes = require('./routes/comboRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -49,6 +50,7 @@ app.use('/api/menus', menuRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/estimations', estimationRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/combos', comboRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -16,6 +16,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PeopleIcon from '@mui/icons-material/People';
@@ -32,6 +33,7 @@ const Sidebar = ({ open, onClose }) => {
     { label: 'Expenses', icon: <LocalOffer />, path: '/expenses' },
     { label: t('navigation.menus'), icon: <RestaurantIcon />, path: '/menus' },
     { label: t('navigation.recipes'), icon: <MenuBookIcon />, path: '/recipes' },
+    { label: 'Combos', icon: <RestaurantMenuIcon />, path: '/combos' },
     { label: t('navigation.estimations'), icon: <CalculateIcon />, path: '/estimations' },
     { label: t('navigation.reports'), icon: <DescriptionIcon />, path: '/reports' }
   ];
