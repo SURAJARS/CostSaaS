@@ -24,6 +24,7 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://cost-saa-s-nine.vercel.app',
   'https://kasikannu.vercel.app',
   'https://cost-saas-git-main-tamilmannan2020-9410s-projects.vercel.app',
   process.env.CORS_ORIGIN
